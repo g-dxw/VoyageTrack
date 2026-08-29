@@ -173,12 +173,92 @@ export async function fromFile(file: File | Blob) {
 
 export function fromKML(kmlData: string) {
     const parser = browser ? new DOMParser() : new XMLDOMParser();
-    const nodes = parser.parseFromString(kmlData, "text/xml")
-    const geojson = kml(nodes) as Feature | FeatureCollection
+    const nodes = parser.parseFromString(kmlData, "text/xml") as unknown as Document;
+    // Preserve descriptions before toGeoJSON normalizes the XML nodes. Some
+    // Two Steps exports store photo HTML in CDATA, which xmldom loses during
+    // normalization inside toGeoJSON.
+    const placemarkDescriptions = Array.from(nodes.getElementsByTagName("Placemark"))
+        .map((placemark) => placemark.getElementsByTagName("description")[0]?.textContent ?? undefined);
+    const geojson = kml(nodes) as Feature | FeatureCollection;
+    const features = geojson.type === "FeatureCollection" ? geojson.features : [geojson];
+    features.forEach((feature, index) => {
+        const description = placemarkDescriptions[index];
+        if (description !== undefined) {
+            feature.properties ??= {};
+            feature.properties.description = normalizeKMLImageLinks(description);
+        }
+    });
 
-    const gpx = fromGeoJSON(geojson);
+    const gpx = fromGeoJSON(geojson, extractKMLDocumentMetadata(nodes));
 
     return gpx
+}
+
+/** Extract image sources embedded in waypoint descriptions (for example KML HTML). */
+export function extractImageUrls(description?: string): string[] {
+    if (!description) return [];
+    const urls: string[] = [];
+    const pattern = /<img\b[^>]*\bsrc\s*=\s*["']([^"']+)["']/gi;
+    for (const match of description.matchAll(pattern)) {
+        try {
+            const url = new URL(match[1]).toString();
+            if (["http:", "https:"].includes(new URL(url).protocol) && !urls.includes(url)) {
+                urls.push(url);
+            }
+        } catch {
+            // Ignore malformed or relative image sources from imported HTML.
+        }
+    }
+    return urls;
+}
+
+function normalizeKMLImageLinks(description: string): string {
+    return description.replace(
+        /<a\b([^>]*)>([\s\S]*?)<\/a>/gi,
+        (anchor, attributes: string, body: string) => {
+            if (!/\bhref\s*=\s*(["'])\s*\1/i.test(attributes)) {
+                return anchor;
+            }
+            const hasSupportedImage = extractImageUrls(body).some((value) => {
+                try {
+                    const url = new URL(value);
+                    return url.protocol === "https:" && url.hostname === "down-files.2bulu.com";
+                } catch {
+                    return false;
+                }
+            });
+            return hasSupportedImage ? body : anchor;
+        },
+    );
+}
+
+// Read direct Document children because toGeoJSON only carries Placemark
+// metadata into feature properties. The loose DOM type supports both the
+// browser parser and @xmldom/xmldom, whose collection types are incompatible.
+function extractKMLDocumentMetadata(root: any): { name?: string; desc?: string; time?: Date } {
+    const doc: any = root.getElementsByTagName("Document")?.[0];
+    if (!doc) return {};
+    let name: string | undefined;
+    let desc: string | undefined;
+    const childNodes = Array.from(doc.childNodes as ArrayLike<any>) as any[];
+    for (const child of childNodes) {
+        if (child.nodeType !== 1) continue;
+        const tag = child.localName || (child.tagName ? child.tagName.replace(/^[^:]*:/, "") : "");
+        if (tag === "name" && !name) {
+            name = firstNonEmptyText(child.textContent);
+        } else if (tag === "description" && !desc) {
+            desc = firstNonEmptyText(child.textContent);
+        }
+    }
+    const meta: { name?: string; desc?: string; time?: Date } = {};
+    if (name) meta.name = name;
+    if (desc) meta.desc = desc;
+    return meta;
+}
+
+function firstNonEmptyText(text: string | null | undefined): string | undefined {
+    const trimmed = text?.trim();
+    return trimmed?.length ? trimmed : undefined;
 }
 
 export async function fromKMZ(kmzData: ArrayBuffer) {
@@ -233,12 +313,12 @@ export async function fromFIT(fitData: ArrayBuffer) {
     }));
 }
 
-export function fromGeoJSON(geoJson: Feature | FeatureCollection) {
+export function fromGeoJSON(geoJson: Feature | FeatureCollection, metadata?: { name?: string; desc?: string; time?: Date }) {
     const gpx = new GPX({
         metadata: {
-            name: "",
-            desc: "",
-            time: new Date(),
+            name: metadata?.name ?? "",
+            desc: metadata?.desc ?? "",
+            time: metadata?.time ?? new Date(),
             keywords: "wanderer"
         },
         trk: [],
@@ -263,20 +343,49 @@ export function fromGeoJSON(geoJson: Feature | FeatureCollection) {
         addSupportedPropertiesFromObject(trk, supports, properties);
         return trk;
     }
-    function createPt(position: Position, properties?: GeoJsonProperties) {
-        const pt = new GPXWaypoint({ $: { lat: position[1], lon: position[0] }, ele: position[2], time: position[3] as any });
+    function createPt(position: Position, properties?: GeoJsonProperties, time?: string) {
+        const pt = new GPXWaypoint({
+            $: { lat: position[1], lon: position[0] },
+            ele: position[2],
+            time: (time ?? position[3] as any) as any
+        });
         const supports = ['name', 'desc', 'src', 'type'];
         if (properties) {
             addSupportedPropertiesFromObject(pt, supports, properties);
+            const description = properties.description;
+            if (!pt.desc && typeof description === 'string') {
+                pt.desc = normalizeKMLImageLinks(description);
+            } else if (
+                !pt.desc &&
+                description &&
+                typeof description === 'object' &&
+                typeof (description as { value?: unknown }).value === 'string'
+            ) {
+                pt.desc = normalizeKMLImageLinks((description as { value: string }).value);
+            }
         }
         return pt;
     }
-    function createTrkSeg(coordinates: Position[]) {
+    function createTrkSeg(coordinates: Position[], times?: string[]) {
         var trkSeg = new TrackSegment({ trkpt: [] });
-        coordinates.forEach(function (point) {
-            trkSeg.trkpt!.push(createPt(point));
+        coordinates.forEach(function (point, i) {
+            trkSeg.trkpt!.push(createPt(point, undefined, times?.[i]));
         });
         return trkSeg;
+    }
+    // toGeoJSON stores LineString times as string[] and MultiLineString times
+    // as string[][], aligned with each segment's coordinates.
+    function extractSegTimes(coordTimes: unknown, segIndex: number): string[] | undefined {
+        if (!Array.isArray(coordTimes)) return undefined;
+        if (coordTimes.length === 0) return undefined;
+        const first = coordTimes[0];
+        if (typeof first === 'string') {
+            return segIndex === 0 ? coordTimes as string[] : undefined;
+        }
+        if (Array.isArray(first)) {
+            return coordTimes[segIndex] as string[] | undefined;
+        }
+        return undefined;
     }
     function interpretFeature(feature: Feature) {
         const geometry = feature.geometry
@@ -285,6 +394,7 @@ export function fromGeoJSON(geoJson: Feature | FeatureCollection) {
         }
         const properties = feature.properties;
         const type = geometry.type;
+        const coordTimes = (properties as any)?.coordinateProperties?.times;
         switch (type) {
             case 'Polygon':
                 break;
@@ -300,15 +410,15 @@ export function fromGeoJSON(geoJson: Feature | FeatureCollection) {
             }
             case 'LineString': {
                 var lineTrk = createTrk(properties);
-                var trkseg = createTrkSeg(geometry.coordinates);
+                var trkseg = createTrkSeg(geometry.coordinates, extractSegTimes(coordTimes, 0));
                 lineTrk.trkseg!.push(trkseg);
                 gpx.trk!.push(lineTrk);
                 break;
             }
             case 'MultiLineString': {
                 var trk_1 = createTrk(properties);
-                geometry.coordinates.forEach(function (pos) {
-                    var trkseg = createTrkSeg(pos);
+                geometry.coordinates.forEach(function (pos, segIndex) {
+                    var trkseg = createTrkSeg(pos, extractSegTimes(coordTimes, segIndex));
                     trk_1.trkseg!.push(trkseg);
                 });
                 gpx.trk!.push(trk_1);

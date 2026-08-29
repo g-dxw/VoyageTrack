@@ -2404,14 +2404,17 @@
                 ><i class="fa fa-plus mr-2"></i>{$_("add-to-list")}</Button
             >
         {/if}
-        <hr class="border-separator" />
-        <Button
-            primary={true}
-            large={true}
-            type="submit"
-            extraClasses="mb-2"
-            {loading}>{$_("save-trail")}</Button
+        <div
+            class="sticky bottom-0 z-20 -mx-8 mt-2 border-t border-separator bg-background px-8 pb-3 pt-3"
         >
+            <Button
+                primary={true}
+                large={true}
+                type="submit"
+                extraClasses="w-full"
+                {loading}>{$_("save-trail")}</Button
+            >
+        </div>
     </form>
     <div class="relative">
         {#if drawingActive}

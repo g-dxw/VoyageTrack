@@ -721,7 +721,7 @@ function gxCoords(node) {
   coordinates = coordinates.filter((_, i) => !invalidCoordinateIndices.includes(i))
 
   return {
-    geometry: coordinates.length > 2 ?
+    geometry: coordinates.length > 1 ?
       {
         type: "LineString",
         coordinates

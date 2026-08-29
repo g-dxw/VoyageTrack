@@ -47,7 +47,11 @@ export async function PUT(event: RequestEvent) {
     try {
         const data = await event.request.formData();
 
-        const { gpxData, gpxFile } = await fromFile(data.get("file") as Blob)
+        const sourceFile = data.get("file");
+        if (!(sourceFile instanceof Blob)) {
+            throw new ClientResponseError({ status: 400, response: { message: "Missing file" } });
+        }
+        const { gpxData, gpxFile } = await fromFile(sourceFile)
 
         if (!gpxData.length) {
             throw new ClientResponseError({ status: 400, response: { message: "Empty file" } })
