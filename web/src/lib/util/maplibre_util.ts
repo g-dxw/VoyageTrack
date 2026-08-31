@@ -58,7 +58,7 @@ export function createMarkerFromWaypoint(waypoint: Waypoint, onDragEnd?: (marker
 
     if (waypoint.description && waypoint.description.length > 0) {
         const descriptionElement = document.createElement("p");
-        descriptionElement.textContent = waypoint.description;
+        descriptionElement.innerHTML = waypoint.description;
         content.appendChild(descriptionElement);
     }
 

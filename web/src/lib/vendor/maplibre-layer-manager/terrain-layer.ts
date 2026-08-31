@@ -4,7 +4,11 @@ import type { BaseLayer } from "./layers";
 export class TerrainLayer implements BaseLayer {
     spec: StyleSpecification;
 
-    constructor(terrainURL: string, hillshadingURL?: string) {
+    constructor(
+        terrainURL: string,
+        hillshadingURL?: string,
+        bounds?: [number, number, number, number],
+    ) {
         const hillshadingEnabled = Boolean(hillshadingURL);
 
         this.spec = {
@@ -14,18 +18,20 @@ export class TerrainLayer implements BaseLayer {
                 terrain: {
                     type: "raster-dem",
                     url: terrainURL,
+                    bounds,
                 },
                 ...(hillshadingEnabled ? {
                     hillshading: {
                         type: "raster-dem",
-                        url: hillshadingURL
+                        url: hillshadingURL,
+                        bounds,
                     }
                 } : {})
 
             },
             layers: hillshadingEnabled ? [{
                 id: "hillshading",
-                source: "terrain",
+                source: "hillshading",
                 type: "hillshade",
                 layout: {
                     visibility: "none",

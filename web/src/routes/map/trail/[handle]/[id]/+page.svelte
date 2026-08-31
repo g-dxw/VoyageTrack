@@ -50,6 +50,8 @@
             activeTrail={0}
             bind:markers
             showTerrain={true}
+            showSandboxControl={true}
+            mapOptions={{ canvasContextAttributes: { preserveDrawingBuffer: true } }}
         ></MapWithElevationMaplibre>
     </div>
 </main>

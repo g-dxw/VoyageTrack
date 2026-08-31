@@ -2446,6 +2446,7 @@
                 drawing={drawingActive}
                 displayWaypoints={!drawingActive || showWaypointsWhileDrawing}
                 showTerrain={true}
+                showSandboxControl={true}
                 autoGeolocateOnDrawing={page.params.id === "new"}
                 onmarkerdragend={moveMarker}
                 activeTrail={0}
