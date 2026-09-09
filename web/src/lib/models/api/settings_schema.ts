@@ -12,6 +12,7 @@ const SettingsCreateSchema = z.object({
         lat: z.number(),
         lon: z.number()
     }).optional().nullable(),
+    tiandituKey: z.string().max(256).optional().nullable(),
     category: z.string().optional(),
     tilesets: z.array(z.object({ name: z.string(), url: z.string().url() })).optional().nullable(),
     terrain: z.object({ terrain: z.string().url().or(z.literal('')).optional(), hillshading: z.string().url().or(z.literal('')).optional() }).optional().nullable(),

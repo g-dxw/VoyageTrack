@@ -83,6 +83,7 @@
 
     let customTilesetName: string = $state("");
     let customTilesetURL: string = $state("");
+    let tiandituKey: string = $state("");
     let terrainURL: string = $state("");
     let hillshadingURL: string = $state("");
 
@@ -91,6 +92,7 @@
         selectedLanguage = settings?.language || "en";
         selectedMapFocus = settings?.mapFocus ?? "trails";
 
+        tiandituKey = settings?.tiandituKey ?? "";
         terrainURL = settings?.terrain?.terrain ?? "";
         hillshadingURL = settings?.terrain?.hillshading ?? "";
     });
@@ -148,6 +150,31 @@
         });
     }
 
+    async function handleTiandituKeySave() {
+        if (!settings) {
+            return;
+        }
+
+        try {
+            await settings_update({
+                id: settings.id,
+                tiandituKey: tiandituKey.trim() || null,
+            });
+            show_toast({
+                type: "success",
+                icon: "check",
+                text: $_("settings-saved"),
+            });
+        } catch (e) {
+            show_toast({
+                type: "error",
+                icon: "close",
+                text: $_("error-updating-tianditu-api-key"),
+            });
+            console.error(e);
+        }
+    }
+
     async function handleTerrainAdd() {
         await settings_update({
             id: settings!.id,
@@ -158,6 +185,9 @@
     let terrainSaveEnabled = $derived(
         terrainURL !== settings?.terrain?.terrain ||
             hillshadingURL !== settings?.terrain?.hillshading,
+    );
+    let tiandituKeySaveEnabled = $derived(
+        tiandituKey !== (settings?.tiandituKey ?? ""),
     );
 </script>
 
@@ -274,6 +304,31 @@
                         ><i class="fa fa-plus"></i></button
                     >
                 </div>
+            </div>
+        </div>
+
+        <div>
+            <h4 class="text-xl font-medium mb-2">Tianditu</h4>
+            <div class="flex items-center gap-2">
+                <div class="basis-full">
+                    <TextField
+                        name="tianditu-key"
+                        label={$_("tianditu-api-key")}
+                        type="password"
+                        autocomplete="off"
+                        bind:value={tiandituKey}
+                        placeholder={$_("tianditu-api-key-placeholder")}
+                    ></TextField>
+                </div>
+                <button
+                    aria-label={$_("save-tianditu-api-key")}
+                    disabled={!tiandituKeySaveEnabled}
+                    class="btn-icon mt-6"
+                    class:hover:!bg-background={!tiandituKeySaveEnabled}
+                    onclick={handleTiandituKeySave}
+                    class:text-gray-500={!tiandituKeySaveEnabled}
+                    ><i class="fa fa-save"></i></button
+                >
             </div>
         </div>
 

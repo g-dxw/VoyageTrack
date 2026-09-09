@@ -1,6 +1,10 @@
 <script lang="ts">
     import { page } from "$app/state";
     import directionCaret from "$lib/assets/svgs/caret-right-solid.svg";
+    import {
+        DEFAULT_MAP_CENTER,
+        DEFAULT_MAP_ZOOM,
+    } from "$lib/config/map";
     import GPX from "$lib/models/gpx/gpx";
     import type { Trail } from "$lib/models/trail";
     import type { Waypoint } from "$lib/models/waypoint";
@@ -21,7 +25,10 @@
     import MaplibreGraticule from "$lib/vendor/maplibre-graticule/maplibre-graticule";
     import { CaretLayer } from "$lib/vendor/maplibre-layer-manager/caret-layer";
     import { ClusterLayer } from "$lib/vendor/maplibre-layer-manager/cluster-layer";
-    import { baseMapStyles } from "$lib/vendor/maplibre-layer-manager/layers";
+    import {
+        baseMapStyles,
+        createTiandituStyle,
+    } from "$lib/vendor/maplibre-layer-manager/layers";
     import { LayerManager } from "$lib/vendor/maplibre-layer-manager/maplibre-layer-manager";
     import type { OverpassPopupActionFactory } from "$lib/vendor/maplibre-layer-manager/overpass-layer";
     import { PreviewLayer } from "$lib/vendor/maplibre-layer-manager/preview-layer";
@@ -1123,9 +1130,9 @@
 
     onMount(async () => {
         const initialState = {
-            lng: 0,
-            lat: 0,
-            zoom: 1,
+            lng: DEFAULT_MAP_CENTER[0],
+            lat: DEFAULT_MAP_CENTER[1],
+            zoom: DEFAULT_MAP_ZOOM,
         };
         const ElevationProfileControl = (
             await import(
@@ -1136,6 +1143,8 @@
         if (!mapContainer) {
             return;
         }
+
+        baseMapStyles.Tianditu = createTiandituStyle();
 
         for (const tileset of page.data.settings?.tilesets ?? []) {
             baseMapStyles[tileset.name] = tileset.url;

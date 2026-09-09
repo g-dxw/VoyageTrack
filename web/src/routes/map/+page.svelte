@@ -2,6 +2,7 @@
     import { browser } from "$app/environment";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
+    import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from "$lib/config/map";
     import Search, {
         type SearchItem,
     } from "$lib/components/base/search.svelte";
@@ -320,17 +321,8 @@
             map?.setZoom(12);
             map?.setCenter([settings.location.lon, settings.location.lat]);
         } else {
-            navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
-                    map?.setZoom(12);
-                    map?.setCenter([lon, lat]);
-                },
-                (error) => {
-                    console.error("Error getting user location:", error);
-                },
-            );
+            map?.setZoom(DEFAULT_MAP_ZOOM);
+            map?.setCenter(DEFAULT_MAP_CENTER);
         }
     }
 

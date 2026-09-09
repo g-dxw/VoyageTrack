@@ -40,7 +40,8 @@
     });
 
     onMount(() => {
-        if (page.data.origin != location.origin) {
+        const isLocalhost = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(location.origin);
+        if (page.data.origin != location.origin && !isLocalhost) {
             showWarning = true;
         }
         if (data.user) {
