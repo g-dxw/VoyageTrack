@@ -48,8 +48,11 @@ env \
   jq -e --arg expected_tag "$TEST_TAG" '
     .services.db.environment.POCKETBASE_PROXY_SECRET == .services.web.environment.POCKETBASE_PROXY_SECRET and
     .services.search.image == "ghcr.io/g-dxw/voyagetrack-db:meilisearch-v1.36.0" and
+    .services.search.pull_policy == "never" and
     .services.db.image == ("ghcr.io/g-dxw/voyagetrack-db:" + $expected_tag) and
+    .services.db.pull_policy == "never" and
     .services.web.image == ("ghcr.io/g-dxw/voyagetrack-web:" + $expected_tag) and
+    .services.web.pull_policy == "never" and
     .services.search.ports == null and
     (.services.db.ports[0].host_ip == "127.0.0.1") and
     (.services.web.ports[0].host_ip == "127.0.0.1")

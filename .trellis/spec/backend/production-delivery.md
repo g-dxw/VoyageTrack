@@ -20,11 +20,11 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 - `main` is production-only. Pull requests into `main` must originate from the repository's own `dev` branch. Required checks are `check-source`, `db-test`, `deployment-contracts`, and `test`; branch protection must require a pull request, strict checks, resolved conversations, administrator enforcement, and forbid force pushes and deletion.
 - A push to `main` may deploy only that exact SHA. Manual workflow dispatch must resolve `refs/heads/main`, never an arbitrary ref.
 - The deploy workflow must wait for successful `go.yml` and `web.yaml` push runs for the same `main` SHA before building release images.
-- Go, Node, TinyGo, OpenAPI generation, Docker builds, and image publication run in GitHub Actions. Production must not clone source, compile code, or run `docker build`.
+- Go, Node, TinyGo, OpenAPI generation, Docker builds, image publication, registry pulls, and `docker save` run in GitHub Actions. Production may receive a prebuilt archive through restricted SSH and run only `docker load` plus Compose; it must not clone source, compile code, or run `docker build`.
 - Production images are `linux/amd64`, immutable by SHA tag, and must carry a revision label equal to the requested release. The server must reject a tag whose label does not match.
 - GHCR images must be anonymously readable. CI must test anonymous manifest access before SSH because the server intentionally has no long-lived registry credential.
-- Third-party runtime images required in production must also be reachable from the server. Mirror a pinned dependency into an existing public GHCR package in Actions when the production network cannot reach its upstream registry; do not build or fetch it from source on the server.
-- The deployment account uses a dedicated forced-command SSH key. The wrapper accepts only `deploy <40-character-lowercase-git-sha>`; sudo grants only the root-owned deployment entrypoint.
+- Third-party runtime images required in production must also be available to Actions. Mirror a pinned dependency into an existing public GHCR package, then include it in the prebuilt archive; do not build or fetch it from source on the server.
+- The deployment account uses a dedicated forced-command SSH key. The wrapper accepts only `load <40-character-lowercase-git-sha>` and `deploy <40-character-lowercase-git-sha>`; sudo grants only the root-owned loader and deployment entrypoints. The loader verifies image revision labels before deployment.
 - `.env`, Compose, release state, data, upload, plugin, Meilisearch, backup, and release paths must not be symlinks or resolve outside their fixed locations. Validated secret values must be passed explicitly to Compose so ambient environment variables cannot override them.
 - Pull all images before stopping writers. Before a migration-capable start, stop writers and create a PocketBase archive plus metadata mapping `previous_release` to `candidate_release`.
 - Automatic rollback restores the prior image and its pre-deploy database archive. It must not restore data while candidate writers may still be running.
@@ -40,7 +40,7 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 | Workflow dispatch is not from `main` | Fail before image build |
 | SHA/tag format is invalid | Exit with usage/configuration error before mutation |
 | Anonymous GHCR pull fails | Stop before SSH and explain that both packages must be public |
-| Production cannot reach an upstream image registry | Mirror the pinned runtime through Actions and pull the GHCR mirror; do not add server-side builds |
+| Production registry downloads are unavailable or unreliable | Pull published images on the runner and stream a `docker save` archive to the restricted loader; do not add server-side builds |
 | Image revision label differs from requested SHA | Reject the candidate before stopping the running release |
 | Required secret is absent or malformed | Fail before pulling/stopping services |
 | Managed path is a symlink or resolves elsewhere | Refuse deployment or restore |

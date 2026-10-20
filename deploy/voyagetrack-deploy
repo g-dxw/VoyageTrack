@@ -11,6 +11,7 @@ readonly PB_DATA_DIR="$DATA_DIR/pb_data"
 readonly BACKUPS_DIR="$BASE_DIR/backups"
 readonly LOCK_FILE="/run/lock/voyagetrack-deploy.lock"
 readonly BACKUP_KEEP_COUNT=7
+readonly SEARCH_IMAGE="ghcr.io/g-dxw/voyagetrack-db:meilisearch-v1.36.0"
 
 usage() {
   echo "Usage: $0 [--restore] <40-character-lowercase-git-sha>" >&2
@@ -38,6 +39,8 @@ fi
 readonly ROLLBACK_MODE RELEASE_SHA
 [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || usage
 readonly CANDIDATE_TAG="sha-$RELEASE_SHA"
+readonly DB_IMAGE="ghcr.io/g-dxw/voyagetrack-db:$CANDIDATE_TAG"
+readonly WEB_IMAGE="ghcr.io/g-dxw/voyagetrack-web:$CANDIDATE_TAG"
 
 [[ ${EUID:-$(id -u)} -eq 0 ]] || die "must run as root"
 
@@ -294,10 +297,10 @@ readonly rollback_source_backup
 log "validating production configuration"
 compose_for "$CANDIDATE_TAG" config --quiet
 
-log "pulling immutable images for $RELEASE_SHA"
-compose_for "$CANDIDATE_TAG" pull search db web
-verify_image_revision "ghcr.io/g-dxw/voyagetrack-db:$CANDIDATE_TAG"
-verify_image_revision "ghcr.io/g-dxw/voyagetrack-web:$CANDIDATE_TAG"
+log "validating preloaded immutable images for $RELEASE_SHA"
+docker image inspect "$SEARCH_IMAGE" >/dev/null || die "preloaded search image is missing: $SEARCH_IMAGE"
+verify_image_revision "$DB_IMAGE"
+verify_image_revision "$WEB_IMAGE"
 
 timestamp=$(date -u +%Y%m%dT%H%M%S%NZ)
 backup_path="$BACKUPS_DIR/pb_data-$timestamp-${previous_release:-initial}.tar.gz"
