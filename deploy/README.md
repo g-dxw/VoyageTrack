@@ -1,9 +1,9 @@
 # VoyageTrack production deployment
 
-Production runs prebuilt `linux/amd64` images from GHCR. GitHub Actions pulls
-the published images on its runner and streams a `docker save` archive through
-the restricted SSH key; the server only runs `docker load` and Compose. It
-never checks out source code and never runs Go, Node, TinyGo, or `docker build`.
+Production runs prebuilt `linux/amd64` images from GHCR. The server pulls those
+published artifacts through the configured mainland GHCR mirrors, retags them
+to their canonical names, and validates the application image revision labels.
+It never checks out source code and never runs Go, Node, TinyGo, or `docker build`.
 GitHub Actions also mirrors the pinned Meilisearch runtime into the already
 public database package as `voyagetrack-db:meilisearch-v1.36.0`, so production
 does not depend on direct Docker Hub access.
@@ -25,7 +25,6 @@ Install the reviewed files with root ownership:
 /srv/apps/voyagetrack/compose.yml
 /usr/local/sbin/voyagetrack-deploy
 /usr/local/sbin/voyagetrack-deploy-key
-/usr/local/sbin/voyagetrack-load
 /usr/local/sbin/voyagetrack-rollback
 /etc/sudoers.d/voyagetrack-deploy
 ```
@@ -46,7 +45,6 @@ sudo install -d -m 0750 /srv/apps/voyagetrack
 sudo install -m 0644 deploy/compose.yml /srv/apps/voyagetrack/compose.yml
 sudo install -m 0755 deploy/voyagetrack-deploy /usr/local/sbin/voyagetrack-deploy
 sudo install -m 0755 deploy/voyagetrack-deploy-key /usr/local/sbin/voyagetrack-deploy-key
-sudo install -m 0755 deploy/voyagetrack-load /usr/local/sbin/voyagetrack-load
 sudo install -m 0755 deploy/voyagetrack-rollback /usr/local/sbin/voyagetrack-rollback
 sudo install -m 0440 deploy/sudoers/voyagetrack-deploy /etc/sudoers.d/voyagetrack-deploy
 sudo visudo -cf /etc/sudoers.d/voyagetrack-deploy
@@ -113,10 +111,9 @@ placeholder:
 restrict,command="/usr/local/sbin/voyagetrack-deploy-key" ssh-ed25519 <PUBLIC_KEY> voyage-track-github-actions
 ```
 
-The forced-command wrapper rejects everything except `load <sha>` and
-`deploy <sha>`. The load command accepts the runner's prebuilt Docker archive;
-the deploy command validates and starts those local images. Both root-owned
-programs independently validate the full release SHA.
+The forced-command wrapper rejects everything except
+`deploy <40-character-lowercase-git-sha>`. The root-owned deployment program
+independently validates the full release SHA.
 
 Configure these GitHub Actions secrets:
 
@@ -133,8 +130,9 @@ Both GHCR packages and the mirrored Meilisearch tag must be publicly readable. N
 be private even when their source repository is public. The deployment job
 performs an anonymous manifest check before opening SSH; if the first publish
 stops there, change both package visibilities to public and rerun the workflow.
-The server intentionally has no long-lived GitHub package credential and does
-not need outbound registry access during deployment.
+The server intentionally has no long-lived GitHub package credential. It pulls
+public images through `ghcr.1ms.run`, with `ghcr.nju.edu.cn` as a fallback,
+then validates the project image revision labels before any service is stopped.
 
 ## Nginx and TLS
 
@@ -157,8 +155,9 @@ An administrator can deploy any immutable commit that has already been built:
 sudo /usr/local/sbin/voyagetrack-deploy <FULL_GIT_SHA>
 ```
 
-The script validates configuration and preloaded image provenance before
-stopping the application, stops writers, archives PocketBase data, starts the candidate,
+The script validates configuration, pulls prebuilt images through the mirrors,
+and validates image provenance before stopping the application. It then stops
+writers, archives PocketBase data, starts the candidate,
 checks both image revision labels and both loopback endpoints. On failure it
 restores the previous image tag and PocketBase backup automatically.
 

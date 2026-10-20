@@ -275,9 +275,6 @@ jobs:
     needs: [prepare, build-images]
     runs-on: ubuntu-latest
     timeout-minutes: 45
-    permissions:
-      contents: read
-      packages: read
     environment: production
     steps:
       - name: Require anonymous pulls for production images
@@ -317,7 +314,7 @@ jobs:
           [[ -n "$DEPLOY_SSH_KEY" ]] || { echo "::error::DEPLOY_SSH_KEY is empty"; exit 1; }
           [[ -n "$DEPLOY_KNOWN_HOSTS" ]] || { echo "::error::DEPLOY_KNOWN_HOSTS is empty"; exit 1; }
 
-      - name: Transfer and deploy the immutable release through the restricted SSH key
+      - name: Deploy the immutable release through the restricted SSH key
         env:
           DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
           DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
@@ -332,29 +329,13 @@ jobs:
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
           chmod 600 "$HOME/.ssh/voyagetrack_deploy" "$HOME/.ssh/known_hosts"
 
-          docker pull --quiet --platform linux/amd64 "$SEARCH_IMAGE:$SEARCH_TAG" >/dev/null
-          docker pull --quiet --platform linux/amd64 "$DB_IMAGE:sha-$RELEASE_SHA" >/dev/null
-          docker pull --quiet --platform linux/amd64 "$WEB_IMAGE:sha-$RELEASE_SHA" >/dev/null
-
-          ssh_options=(
-            -o BatchMode=yes
-            -o IdentitiesOnly=yes
-            -o StrictHostKeyChecking=yes
-            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
-            -i "$HOME/.ssh/voyagetrack_deploy"
-            -p "$DEPLOY_PORT"
-          )
-
-          # shellcheck disable=SC2029
-          docker save \
-            "$SEARCH_IMAGE:$SEARCH_TAG" \
-            "$DB_IMAGE:sha-$RELEASE_SHA" \
-            "$WEB_IMAGE:sha-$RELEASE_SHA" | \
-            ssh "${ssh_options[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
-              "load $RELEASE_SHA"
-
-          # shellcheck disable=SC2029
-          ssh "${ssh_options[@]}" \
+          ssh \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            -i "$HOME/.ssh/voyagetrack_deploy" \
+            -p "$DEPLOY_PORT" \
             "$DEPLOY_USER@$DEPLOY_HOST" \
             "deploy $RELEASE_SHA"
 
