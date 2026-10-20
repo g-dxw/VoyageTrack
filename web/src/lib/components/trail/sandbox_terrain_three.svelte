@@ -1,11 +1,12 @@
 <script lang="ts">
     import type { FeatureCollection, LineString, MultiLineString } from "geojson";
     import * as M from "maplibre-gl";
-    import type { StyleSpecification } from "maplibre-gl";
+    import type { StyleSpecification, VisibilitySpecification } from "maplibre-gl";
     import { onDestroy, onMount, tick } from "svelte";
     import * as THREE from "three";
     import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
     import type { SandboxBounds } from "$lib/util/sandbox_util";
+    import { sanitizeWaypointHTML } from "$lib/util/sanitize_html";
     import type { Waypoint } from "$lib/models/waypoint";
 
     interface Props {
@@ -330,14 +331,14 @@
         ].filter(
             (layerId): layerId is string => Boolean(layerId && map?.getLayer(layerId)),
         );
-        const previousVisibility = new Map<string, string>();
+        const previousVisibility = new Map<string, VisibilitySpecification>();
         const previousTerrain = map.getTerrain();
 
         try {
             hiddenLayers.forEach((layerId) => {
                 previousVisibility.set(
                     layerId,
-                    (map?.getLayoutProperty(layerId, "visibility") as string) ??
+                    (map?.getLayoutProperty(layerId, "visibility") as VisibilitySpecification) ??
                         "visible",
                 );
                 map?.setLayoutProperty(layerId, "visibility", "none");
@@ -1068,7 +1069,7 @@
                     {selectedWaypoint.name || "打卡点"}
                 </div>
                 {#if selectedWaypoint.description}
-                    <div class="sandbox-popup-description">{@html selectedWaypoint.description}</div>
+                    <div class="sandbox-popup-description">{@html sanitizeWaypointHTML(selectedWaypoint.description)}</div>
                 {/if}
                 <div class="sandbox-popup-coordinates">
                     {selectedWaypoint.lat.toFixed(5)}, {selectedWaypoint.lon.toFixed(5)}

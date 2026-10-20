@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Review backend security, migration, errors, formatting, vet, and tests."}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Review Svelte checks, unit coverage, build, accessibility, and browser flows."}
+{"file": ".trellis/spec/plugins/index.md", "reason": "Review SDK/provider contract and WASM validation."}
+{"file": ".trellis/spec/docs/index.md", "reason": "Review docs/OpenAPI consistency and build."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "Review end-to-end import, storage, rendering, migration, and deployment flows."}
+{"file": ".trellis/tasks/10-20-merge-upstream-dev/research/upstream-dev-update.md", "reason": "Verify upstream security, migration, and breaking changes were retained."}
+{"file": ".trellis/tasks/10-20-merge-upstream-dev/research/conflict-resolution.md", "reason": "Verify every conflict and overlap follows the documented preservation rules."}
+{"file": ".trellis/tasks/10-20-merge-upstream-dev/research/validation-plan.md", "reason": "Use the complete quality gate and rollback constraints."}

@@ -1,7 +1,7 @@
-FROM curlimages/curl:8.18.0 AS download-env
+FROM curlimages/curl:8.22.0 AS download-env
 
 # renovate: datasource=github-releases depName=stunnel/static-curl packageName=stunnel/static-curl
-ENV CURL_VERSION=8.18.0
+ENV CURL_VERSION=8.22.0
 
 RUN set -eux ; \
     ARCHITECTURE="$(uname -m)" ; \
@@ -28,7 +28,7 @@ RUN set -eux ; \
     tar -xJf /tmp/curl.tar.xz -C /tmp ; \
     chmod +x /tmp/curl ;
 
-FROM golang:1.25.0@sha256:5502b0e56fca23feba76dbc5387ba59c593c02ccc2f0f7355871ea9a0852cebe AS build
+FROM golang:1.26@sha256:9d2f36f06329b2a141b9db99ffa32765cf695ee57b813ca29e245e8670bcbfff AS build
 
 WORKDIR /app
 
