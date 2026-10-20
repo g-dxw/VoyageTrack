@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+readonly LOCK_FILE="/run/lock/voyagetrack-deploy.lock"
+readonly SEARCH_IMAGE="ghcr.io/g-dxw/voyagetrack-db:meilisearch-v1.36.0"
+
+usage() {
+  echo "Usage: $0 <40-character-lowercase-git-sha>" >&2
+  exit 64
+}
+
+die() {
+  printf '[voyagetrack-load] ERROR: %s\n' "$*" >&2
+  exit 1
+}
+
+[[ $# -eq 1 ]] || usage
+readonly RELEASE_SHA="$1"
+[[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || usage
+readonly DB_IMAGE="ghcr.io/g-dxw/voyagetrack-db:sha-$RELEASE_SHA"
+readonly WEB_IMAGE="ghcr.io/g-dxw/voyagetrack-web:sha-$RELEASE_SHA"
+
+[[ ${EUID:-$(id -u)} -eq 0 ]] || die "must run as root"
+for command_name in docker flock; do
+  command -v "$command_name" >/dev/null 2>&1 || die "required command is missing: $command_name"
+done
+
+exec 9>"$LOCK_FILE"
+flock -n 9 || die "another VoyageTrack image load or deployment is running"
+
+docker load >/dev/null || die "could not load the prebuilt image archive"
+docker image inspect "$SEARCH_IMAGE" >/dev/null || die "archive did not contain $SEARCH_IMAGE"
+
+for image_ref in "$DB_IMAGE" "$WEB_IMAGE"; do
+  revision=$(docker image inspect \
+    --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+    "$image_ref") || die "archive did not contain $image_ref"
+  [[ "$revision" == "$RELEASE_SHA" ]] || die "image revision does not match requested release: $image_ref"
+done
+
+printf '[voyagetrack-load] prebuilt images for %s are ready\n' "$RELEASE_SHA"

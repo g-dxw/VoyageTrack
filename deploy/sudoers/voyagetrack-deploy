@@ -1,2 +1,2 @@
 Defaults:voyagetrack-deploy !requiretty
-voyagetrack-deploy ALL=(root) NOPASSWD: /usr/local/sbin/voyagetrack-deploy
+voyagetrack-deploy ALL=(root) NOPASSWD: /usr/local/sbin/voyagetrack-load, /usr/local/sbin/voyagetrack-deploy
