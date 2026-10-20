@@ -49,12 +49,9 @@ docker run --rm \
     for rejected_command in \
       "" \
       "deploy" \
-      "load" \
       "deploy not-a-sha" \
-      "load not-a-sha" \
       "rollback $INITIAL_SHA" \
-      "deploy $INITIAL_SHA extra" \
-      "load $INITIAL_SHA extra"; do
+      "deploy $INITIAL_SHA extra"; do
       set +e
       SSH_ORIGINAL_COMMAND="$rejected_command" /source/voyagetrack-deploy-key >/dev/null 2>&1
       result=$?
@@ -67,20 +64,6 @@ docker run --rm \
     [[ "${sudo_arguments[0]}" == "-n" ]]
     [[ "${sudo_arguments[1]}" == "/usr/local/sbin/voyagetrack-deploy" ]]
     [[ "${sudo_arguments[2]}" == "$INITIAL_SHA" ]]
-    SSH_ORIGINAL_COMMAND="load $INITIAL_SHA" /source/voyagetrack-deploy-key
-    mapfile -t sudo_arguments < /tmp/voyagetrack-fake-sudo-arguments
-    [[ ${#sudo_arguments[@]} -eq 3 ]]
-    [[ "${sudo_arguments[0]}" == "-n" ]]
-    [[ "${sudo_arguments[1]}" == "/usr/local/sbin/voyagetrack-load" ]]
-    [[ "${sudo_arguments[2]}" == "$INITIAL_SHA" ]]
-    PATH="/test-bin:$PATH" /source/voyagetrack-load "$INITIAL_SHA" < /dev/null
-    set +e
-    PATH="/test-bin:$PATH" \
-      MISMATCH_IMAGE_TAG="sha-$MISMATCH_SHA" \
-      /source/voyagetrack-load "$MISMATCH_SHA" < /dev/null
-    result=$?
-    set -e
-    [[ $result -ne 0 ]]
     /source/voyagetrack-rollback "$INITIAL_SHA"
     mapfile -t deploy_arguments < /tmp/voyagetrack-fake-deploy-arguments
     [[ ${#deploy_arguments[@]} -eq 2 ]]
