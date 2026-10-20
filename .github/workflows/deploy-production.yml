@@ -332,6 +332,8 @@ jobs:
           ssh \
             -o BatchMode=yes \
             -o IdentitiesOnly=yes \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=60 \
             -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
             -i "$HOME/.ssh/voyagetrack_deploy" \
