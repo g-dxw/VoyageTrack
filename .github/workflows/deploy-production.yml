@@ -1,0 +1,317 @@
+name: Deploy Production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: voyage-track-production
+  cancel-in-progress: false
+
+env:
+  REGISTRY: ghcr.io
+  DB_IMAGE: ghcr.io/g-dxw/voyagetrack-db
+  WEB_IMAGE: ghcr.io/g-dxw/voyagetrack-web
+
+jobs:
+  prepare:
+    name: prepare-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      release-sha: ${{ steps.release.outputs.sha }}
+      image-tag: ${{ steps.release.outputs.tag }}
+    steps:
+      - name: Check out the production revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event_name == 'push' && github.sha || 'refs/heads/main' }}
+          fetch-depth: 1
+
+      - name: Resolve and validate the main revision
+        id: release
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_REF: ${{ github.ref }}
+          EVENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          sha=$(git rev-parse HEAD)
+
+          if [[ "$EVENT_REF" != "refs/heads/main" ]]; then
+            echo "::error::Production workflows must be dispatched from refs/heads/main."
+            exit 1
+          fi
+
+          if [[ ! "$sha" =~ ^[0-9a-f]{40}$ ]]; then
+            echo "::error::Resolved revision is not a full lowercase Git SHA."
+            exit 1
+          fi
+
+          if [[ "$EVENT_NAME" == "push" && "$sha" != "$EVENT_SHA" ]]; then
+            echo "::error::Push revision does not match the checked-out main revision."
+            exit 1
+          fi
+
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "tag=sha-$sha" >> "$GITHUB_OUTPUT"
+          echo "Preparing immutable production release $sha" >> "$GITHUB_STEP_SUMMARY"
+
+  wait-for-ci:
+    name: wait-for-main-ci
+    needs: prepare
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Require Go and Web push workflows for the exact main SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.release-sha }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          required_workflows=(go.yml web.yaml)
+          deadline=$((SECONDS + 2700))
+
+          while (( SECONDS < deadline )); do
+            all_successful=true
+
+            for workflow_file in "${required_workflows[@]}"; do
+              workflow_runs=$(gh api \
+                -H "Accept: application/vnd.github+json" \
+                "/repos/$REPOSITORY/actions/workflows/$workflow_file/runs?branch=main&event=push&head_sha=$RELEASE_SHA&per_page=20")
+              conclusion=$(jq -r --arg sha "$RELEASE_SHA" '
+                [.workflow_runs[]
+                  | select(.head_sha == $sha and .head_branch == "main" and .event == "push")]
+                | sort_by(.run_started_at)
+                | last
+                | if . == null then "missing" else (.conclusion // .status) end
+              ' <<<"$workflow_runs")
+
+              case "$conclusion" in
+                success)
+                  echo "$workflow_file: success"
+                  ;;
+                failure|cancelled|timed_out|action_required|startup_failure|stale|neutral|skipped)
+                  echo "::error::$workflow_file concluded with $conclusion for $RELEASE_SHA"
+                  exit 1
+                  ;;
+                *)
+                  echo "$workflow_file: $conclusion"
+                  all_successful=false
+                  ;;
+              esac
+            done
+
+            if [[ "$all_successful" == "true" ]]; then
+              exit 0
+            fi
+
+            sleep 15
+          done
+
+          echo "::error::Timed out waiting for required main checks on $RELEASE_SHA"
+          exit 1
+
+  build-images:
+    name: build-production-images
+    needs: [prepare, wait-for-ci]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.prepare.outputs.release-sha }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Generate the OpenAPI artifact included by the web image
+        run: |
+          npm --prefix web ci
+          npm --prefix web run openapi:generate
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Detect existing immutable tags
+        id: image-state
+        env:
+          IMAGE_TAG: ${{ needs.prepare.outputs.image-tag }}
+        run: |
+          set -euo pipefail
+          if docker buildx imagetools inspect "$DB_IMAGE:$IMAGE_TAG" >/dev/null 2>&1; then
+            echo "db_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "db_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if docker buildx imagetools inspect "$WEB_IMAGE:$IMAGE_TAG" >/dev/null 2>&1; then
+            echo "web_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "web_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and publish the database image
+        id: db-image
+        if: steps.image-state.outputs.db_exists != 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: db
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.DB_IMAGE }}:${{ needs.prepare.outputs.image-tag }}
+            ${{ env.DB_IMAGE }}:main
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ needs.prepare.outputs.release-sha }}
+          cache-from: type=gha,scope=production-db
+          cache-to: type=gha,mode=max,scope=production-db
+
+      - name: Build and publish the web image
+        id: web-image
+        if: steps.image-state.outputs.web_exists != 'true'
+        uses: docker/build-push-action@v7
+        with:
+          context: web
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.WEB_IMAGE }}:${{ needs.prepare.outputs.image-tag }}
+            ${{ env.WEB_IMAGE }}:main
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ needs.prepare.outputs.release-sha }}
+          cache-from: type=gha,scope=production-web
+          cache-to: type=gha,mode=max,scope=production-web
+
+      - name: Resolve immutable image digests
+        id: image-digests
+        env:
+          IMAGE_TAG: ${{ needs.prepare.outputs.image-tag }}
+        run: |
+          set -euo pipefail
+          db_digest="sha256:$(docker buildx imagetools inspect --raw "$DB_IMAGE:$IMAGE_TAG" | sha256sum | awk '{print $1}')"
+          web_digest="sha256:$(docker buildx imagetools inspect --raw "$WEB_IMAGE:$IMAGE_TAG" | sha256sum | awk '{print $1}')"
+          echo "db=$db_digest" >> "$GITHUB_OUTPUT"
+          echo "web=$web_digest" >> "$GITHUB_OUTPUT"
+
+      - name: Write release manifest
+        env:
+          RELEASE_SHA: ${{ needs.prepare.outputs.release-sha }}
+          IMAGE_TAG: ${{ needs.prepare.outputs.image-tag }}
+          DB_DIGEST: ${{ steps.image-digests.outputs.db }}
+          WEB_DIGEST: ${{ steps.image-digests.outputs.web }}
+        run: |
+          jq -n \
+            --arg release_sha "$RELEASE_SHA" \
+            --arg image_tag "$IMAGE_TAG" \
+            --arg db_image "$DB_IMAGE" \
+            --arg db_digest "$DB_DIGEST" \
+            --arg web_image "$WEB_IMAGE" \
+            --arg web_digest "$WEB_DIGEST" \
+            '{release_sha: $release_sha, image_tag: $image_tag,
+              images: {
+                db: {name: $db_image, digest: $db_digest},
+                web: {name: $web_image, digest: $web_digest}
+              }}' > release-manifest.json
+
+      - name: Upload release manifest
+        uses: actions/upload-artifact@v7
+        with:
+          name: production-release-${{ needs.prepare.outputs.release-sha }}
+          path: release-manifest.json
+          retention-days: 90
+          if-no-files-found: error
+
+  deploy:
+    name: deploy-production
+    needs: [prepare, build-images]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - name: Require anonymous pulls for production images
+        env:
+          IMAGE_TAG: ${{ needs.prepare.outputs.image-tag }}
+        run: |
+          set -euo pipefail
+          anonymous_docker_config=$(mktemp -d)
+          trap 'rm -rf -- "$anonymous_docker_config"' EXIT
+
+          DOCKER_CONFIG="$anonymous_docker_config" docker manifest inspect "$DB_IMAGE:$IMAGE_TAG" >/dev/null || {
+            echo "::error::$DB_IMAGE:$IMAGE_TAG is not anonymously readable. Make the GHCR package public, then rerun this workflow."
+            exit 1
+          }
+          DOCKER_CONFIG="$anonymous_docker_config" docker manifest inspect "$WEB_IMAGE:$IMAGE_TAG" >/dev/null || {
+            echo "::error::$WEB_IMAGE:$IMAGE_TAG is not anonymously readable. Make the GHCR package public, then rerun this workflow."
+            exit 1
+          }
+
+      - name: Validate deployment connection settings
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          [[ "$DEPLOY_HOST" =~ ^[A-Za-z0-9._-]+$ ]] || { echo "::error::Invalid DEPLOY_HOST"; exit 1; }
+          [[ "$DEPLOY_PORT" =~ ^[0-9]{1,5}$ ]] || { echo "::error::Invalid DEPLOY_PORT"; exit 1; }
+          (( DEPLOY_PORT >= 1 && DEPLOY_PORT <= 65535 )) || { echo "::error::DEPLOY_PORT is out of range"; exit 1; }
+          [[ "$DEPLOY_USER" =~ ^[a-z_][a-z0-9_-]*$ ]] || { echo "::error::Invalid DEPLOY_USER"; exit 1; }
+          [[ -n "$DEPLOY_SSH_KEY" ]] || { echo "::error::DEPLOY_SSH_KEY is empty"; exit 1; }
+          [[ -n "$DEPLOY_KNOWN_HOSTS" ]] || { echo "::error::DEPLOY_KNOWN_HOSTS is empty"; exit 1; }
+
+      - name: Deploy the immutable release through the restricted SSH key
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+          RELEASE_SHA: ${{ needs.prepare.outputs.release-sha }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/voyagetrack_deploy"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/voyagetrack_deploy" "$HOME/.ssh/known_hosts"
+
+          ssh \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            -i "$HOME/.ssh/voyagetrack_deploy" \
+            -p "$DEPLOY_PORT" \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "deploy $RELEASE_SHA"
+
+          echo "Production accepted release $RELEASE_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Remove the temporary private key
+        if: ${{ always() }}
+        run: rm -f "$HOME/.ssh/voyagetrack_deploy"

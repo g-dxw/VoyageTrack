@@ -1,0 +1,5 @@
+.env
+.release
+.nginx-test.*
+backups/
+data/

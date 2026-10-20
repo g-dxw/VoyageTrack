@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [[ "${1:-}" == "image" && "${2:-}" == "ls" ]]; then
+  exit 0
+fi
+
+if [[ "${1:-}" == "image" && "${2:-}" == "inspect" ]]; then
+  image_ref="${*: -1}"
+  image_tag="${image_ref##*:}"
+  if [[ -n "${MISMATCH_IMAGE_TAG:-}" && "$image_tag" == "$MISMATCH_IMAGE_TAG" ]]; then
+    printf '%s\n' 0000000000000000000000000000000000000000
+    exit 0
+  fi
+  printf '%s\n' "${image_tag#sha-}"
+  exit 0
+fi
+
+if [[ -n "${FAIL_IMAGE_TAG:-}" && "${IMAGE_TAG:-}" == "$FAIL_IMAGE_TAG" && " $* " == *" up "* ]]; then
+  printf 'candidate-mutated-data\n' > /srv/apps/voyagetrack/data/pb_data/state.txt
+  exit 1
+fi
+
+if [[ -n "${FAIL_STOP_IMAGE_TAG:-}" && "${IMAGE_TAG:-}" == "$FAIL_STOP_IMAGE_TAG" && " $* " == *" stop "* ]]; then
+  exit 1
+fi
+
+exit 0

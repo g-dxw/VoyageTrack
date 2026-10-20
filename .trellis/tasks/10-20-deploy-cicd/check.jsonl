@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/activitypub-proxy-secret.md","reason":"Verify both services share a required private proxy secret."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Run backend formatting, vet, tests, and secret review."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Run Svelte checks, tests, build, and browser-relevant validation."}
+{"file":".trellis/spec/plugins/index.md","reason":"Verify plugin modules and WASM packaging remain green."}
+{"file":".trellis/spec/docs/index.md","reason":"Verify operator docs and examples contain no credentials."}
+{"file":".trellis/tasks/10-20-deploy-cicd/research/deployment-baseline.md","reason":"Compare final GitHub/server/public state to the recorded baseline."}

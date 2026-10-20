@@ -1,0 +1,6 @@
+{"file":".trellis/spec/backend/activitypub-proxy-secret.md","reason":"Required shared-secret and Compose fail-closed contract."}
+{"file":".trellis/spec/backend/quality-guidelines.md","reason":"Backend validation, secret hygiene, and migration review rules."}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Frontend check, test, and production build requirements."}
+{"file":".trellis/spec/plugins/index.md","reason":"First-party plugin test and TinyGo build contract."}
+{"file":".trellis/spec/docs/index.md","reason":"Deployment documentation must match commands and omit secrets."}
+{"file":".trellis/tasks/10-20-deploy-cicd/research/deployment-baseline.md","reason":"Verified GitHub, server, port, capacity, and DNS baseline."}

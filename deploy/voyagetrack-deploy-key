@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+deny() {
+  echo "Only 'deploy <40-character-lowercase-git-sha>' is allowed." >&2
+  exit 64
+}
+
+read -r -a command_parts <<< "${SSH_ORIGINAL_COMMAND:-}"
+[[ ${#command_parts[@]} -eq 2 ]] || deny
+[[ "${command_parts[0]}" == "deploy" ]] || deny
+[[ "${command_parts[1]}" =~ ^[0-9a-f]{40}$ ]] || deny
+
+exec /usr/bin/sudo -n /usr/local/sbin/voyagetrack-deploy "${command_parts[1]}"

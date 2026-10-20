@@ -2,17 +2,20 @@ name: Web CI
 
 on:
   push:
-    branches: [ main, dev ]
-    paths:
-      - '.github/**'
-      - 'web/**'
+    branches: [main, dev]
   pull_request:
-    paths:
-      - '.github/**'
-      - 'web/**'
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: test
     runs-on: ubuntu-latest
     timeout-minutes: 45
 
@@ -26,6 +29,9 @@ jobs:
       - uses: actions/setup-go@v6
         with:
           go-version: '1.26'
+
+      - name: Generate CI-only proxy secret
+        run: echo "POCKETBASE_PROXY_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
       - run: make db-build-docker
 
