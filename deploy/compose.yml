@@ -12,7 +12,7 @@ x-common-logging: &common-logging
 
 services:
   search:
-    image: getmeili/meilisearch:v1.36.0
+    image: ghcr.io/g-dxw/voyagetrack-db:meilisearch-v1.36.0
     restart: unless-stopped
     environment:
       <<: *common-environment

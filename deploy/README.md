@@ -2,6 +2,9 @@
 
 Production runs prebuilt `linux/amd64` images from GHCR. The server never
 checks out source code and never runs Go, Node, TinyGo, or `docker build`.
+GitHub Actions also mirrors the pinned Meilisearch runtime into the already
+public database package as `voyagetrack-db:meilisearch-v1.36.0`, so production
+does not depend on direct Docker Hub access.
 Merging the repository's `dev` branch into `main` starts
 `.github/workflows/deploy-production.yml`, which publishes immutable
 `sha-<40-character-git-sha>` images and calls the restricted deploy command.
@@ -121,7 +124,7 @@ Configure these GitHub Actions secrets:
 Do not generate `DEPLOY_KNOWN_HOSTS` inside the workflow. Verify the host key
 through an existing trusted administrative connection before storing it.
 
-Both GHCR packages must be publicly readable. New GHCR packages may initially
+Both GHCR packages and the mirrored Meilisearch tag must be publicly readable. New GHCR packages may initially
 be private even when their source repository is public. The deployment job
 performs an anonymous manifest check before opening SSH; if the first publish
 stops there, change both package visibilities to public and rerun the workflow.
