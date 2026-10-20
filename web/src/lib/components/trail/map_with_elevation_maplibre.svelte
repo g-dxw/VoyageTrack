@@ -1,6 +1,10 @@
 <script lang="ts">
     import { page } from "$app/state";
     import directionCaret from "$lib/assets/svgs/caret-right-solid.svg";
+    import {
+        DEFAULT_MAP_CENTER,
+        DEFAULT_MAP_ZOOM,
+    } from "$lib/config/map";
     import GPX from "$lib/models/gpx/gpx";
     import type { Trail } from "$lib/models/trail";
     import type { Waypoint } from "$lib/models/waypoint";
@@ -12,21 +16,30 @@
         FontawesomeMarker,
     } from "$lib/util/maplibre_util";
     import { decodePolyline } from "$lib/util/polyline_util";
+    import {
+        padSandboxBounds,
+        type SandboxBounds,
+    } from "$lib/util/sandbox_util";
     import type { ElevationProfileControl } from "$lib/vendor/maplibre-elevation-profile/elevationprofile-control";
     import { FullscreenControl } from "$lib/vendor/maplibre-fullscreen/fullscreen-control";
     import MaplibreGraticule from "$lib/vendor/maplibre-graticule/maplibre-graticule";
     import { CaretLayer } from "$lib/vendor/maplibre-layer-manager/caret-layer";
     import { ClusterLayer } from "$lib/vendor/maplibre-layer-manager/cluster-layer";
-    import { baseMapStyles } from "$lib/vendor/maplibre-layer-manager/layers";
+    import {
+        baseMapStyles,
+        createTiandituStyle,
+    } from "$lib/vendor/maplibre-layer-manager/layers";
     import { LayerManager } from "$lib/vendor/maplibre-layer-manager/maplibre-layer-manager";
     import type { OverpassPopupActionFactory } from "$lib/vendor/maplibre-layer-manager/overpass-layer";
     import { PreviewLayer } from "$lib/vendor/maplibre-layer-manager/preview-layer";
+    import SandboxTerrainThree from "./sandbox_terrain_three.svelte";
     import { TerrainLayer } from "$lib/vendor/maplibre-layer-manager/terrain-layer";
     import { TrailLayer } from "$lib/vendor/maplibre-layer-manager/trail-layer";
     import { StyleSwitcherControl } from "$lib/vendor/maplibre-style-switcher/style-switcher-control";
     import type { Feature, FeatureCollection, GeoJSON } from "geojson";
     import * as M from "maplibre-gl";
     import "maplibre-gl/dist/maplibre-gl.css";
+    import "$lib/util/maplibre_worker";
     import { onDestroy, onMount, untrack } from "svelte";
 
     interface Props {
@@ -44,6 +57,7 @@
         showStyleSwitcher?: boolean;
         showFullscreen?: boolean;
         showTerrain?: boolean;
+        showSandboxControl?: boolean;
         fitBounds?: "animate" | "instant" | "off";
         onmarkerdragend?:
             | ((marker: M.Marker, wpId?: string) => void)
@@ -90,6 +104,7 @@
         showStyleSwitcher = true,
         showFullscreen = false,
         showTerrain = false,
+        showSandboxControl = false,
         fitBounds = "instant",
         elevationProfileContainer = undefined,
         mapOptions = undefined,
@@ -125,7 +140,13 @@
 
     let mapLoaded: boolean = $state(false);
     let terrainEnabled: boolean | null = null;
+    let sandboxMode = $state(false);
+    let mapView = $state<"map" | "sandbox">("map");
+    let activeMapStyle = $state("");
+    let sandboxStyleRefreshing = false;
+    let sandboxBounds: M.LngLatBounds | null = null;
     let elevationProfileVisibilityPreference: boolean | null = null;
+    let sandboxTerrain: SandboxTerrainThree;
 
     const trailColors = [
         "#3549bb", // blue
@@ -141,6 +162,43 @@
     ];
 
     let clusterPopup: M.Popup | null = null;
+
+    class SandboxControl implements M.IControl {
+        private container = document.createElement("div");
+        private button = document.createElement("button");
+        private readonly onToggle: () => void;
+
+        constructor(onToggle: () => void, enabled: boolean) {
+            this.onToggle = onToggle;
+            this.container.className = "maplibregl-ctrl maplibregl-ctrl-group";
+            this.button.type = "button";
+            this.button.className = "maplibregl-ctrl-icon";
+            this.button.innerHTML = '<i class="fa fa-cube" aria-hidden="true"></i>';
+            this.button.title = enabled
+                ? "Toggle 3D sandbox"
+                : "Configure a terrain source to use 3D sandbox";
+            this.button.setAttribute("aria-label", "Toggle 3D sandbox");
+            this.button.disabled = !enabled;
+            this.button.addEventListener("click", this.onToggle);
+            this.container.appendChild(this.button);
+        }
+
+        onAdd() {
+            return this.container;
+        }
+
+        onRemove() {
+            this.button.removeEventListener("click", this.onToggle);
+            this.container.remove();
+        }
+
+        setActive(active: boolean) {
+            this.button.classList.toggle("active", active);
+            this.button.setAttribute("aria-pressed", String(active));
+        }
+    }
+
+    let sandboxControl: SandboxControl | undefined;
 
     let mapData = $derived(getData(trails, serverClusters));
     let gpxDataMap = $derived(mapData[0]);
@@ -351,6 +409,206 @@
             isTerrainEnabled ? "visible" : "none",
         );
         terrainEnabled = isTerrainEnabled;
+    }
+
+    async function toggleSandboxMode() {
+        if (!map || !page.data.settings?.terrain?.terrain) {
+            return;
+        }
+
+        if (sandboxMode) {
+            disableSandboxMode();
+            return;
+        }
+
+        const bounds = getSandboxBounds();
+        if (!bounds) {
+            return;
+        }
+
+        sandboxMode = true;
+        mapView = "sandbox";
+        sandboxBounds = bounds;
+        sandboxControl?.setActive(true);
+        const boundsArray: SandboxBounds = [
+            bounds.getWest(),
+            bounds.getSouth(),
+            bounds.getEast(),
+            bounds.getNorth(),
+        ];
+        replaceTerrainLayer(boundsArray);
+        map.setTerrain({ source: "terrain", exaggeration: 1.25 });
+
+        const activeId = activeTrail !== null ? trails[activeTrail]?.id : null;
+        await sandboxTerrain.show(
+            boundsArray,
+            activeId ? gpxDataMap[activeId] : undefined,
+            activeId ?? undefined,
+        );
+    }
+
+    async function selectMapView(view: "map" | "sandbox") {
+        if (view === "sandbox") {
+            if (!sandboxMode) {
+                await toggleSandboxMode();
+            }
+            return;
+        }
+
+        if (sandboxMode) {
+            disableSandboxMode();
+        } else {
+            mapView = "map";
+        }
+    }
+
+    function disableSandboxMode() {
+        if (!map) {
+            return;
+        }
+
+        sandboxTerrain?.hide();
+        sandboxMode = false;
+        mapView = "map";
+        sandboxBounds = null;
+        sandboxControl?.setActive(false);
+        map.setTerrain(null);
+        replaceTerrainLayer();
+        map.easeTo({ pitch: 0, bearing: 0, duration: 400 });
+    }
+
+    function handleSandboxError(error: Error) {
+        console.error("Failed to create 3D sandbox", error);
+        if (sandboxStyleRefreshing) {
+            return;
+        }
+        disableSandboxMode();
+    }
+
+    async function refreshSandboxTexture() {
+        if (!sandboxMode || !sandboxBounds || !map) {
+            return;
+        }
+
+        const bounds: SandboxBounds = [
+            sandboxBounds.getWest(),
+            sandboxBounds.getSouth(),
+            sandboxBounds.getEast(),
+            sandboxBounds.getNorth(),
+        ];
+        replaceTerrainLayer(bounds);
+        map.setTerrain({ source: "terrain", exaggeration: 1.25 });
+        await waitForMapIdle(5000);
+        await new Promise<void>((resolve) =>
+            requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+        );
+        const activeId = activeTrail !== null ? trails[activeTrail]?.id : null;
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+            const ready = await sandboxTerrain.show(
+                bounds,
+                activeId ? gpxDataMap[activeId] : undefined,
+                activeId ?? undefined,
+            );
+            if (ready) {
+                return;
+            }
+            await waitForMapIdle(2500);
+        }
+    }
+
+    async function changeSandboxStyle(style: string) {
+        if (!layerManager || !baseMapStyles[style]) {
+            return;
+        }
+
+        sandboxStyleRefreshing = true;
+        try {
+            activeMapStyle = style;
+            layerManager.update({
+                ...layerManager.state,
+                base: style,
+            });
+            await waitForStyleData(5000);
+            await refreshSandboxTexture();
+        } finally {
+            sandboxStyleRefreshing = false;
+        }
+    }
+
+    function waitForStyleData(timeout: number) {
+        const currentMap = map;
+        if (!currentMap) {
+            return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve) => {
+            let settled = false;
+            const finish = () => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                currentMap.off("styledata", finish);
+                resolve();
+            };
+
+            currentMap.once("styledata", finish);
+            window.setTimeout(finish, timeout);
+        });
+    }
+
+    function waitForMapIdle(timeout: number) {
+        const currentMap = map;
+        if (!currentMap || (currentMap.loaded() && currentMap.areTilesLoaded())) {
+            return Promise.resolve();
+        }
+
+        return new Promise<void>((resolve) => {
+            let settled = false;
+            const finish = () => {
+                if (settled) {
+                    return;
+                }
+                settled = true;
+                currentMap.off("idle", finish);
+                resolve();
+            };
+
+            currentMap.on("idle", finish);
+            window.setTimeout(finish, timeout);
+        });
+    }
+
+    function replaceTerrainLayer(bounds?: SandboxBounds) {
+        if (!map || !page.data.settings?.terrain?.terrain) {
+            return;
+        }
+
+        map.setTerrain(null);
+        layerManager.removeLayer("terrain");
+        layerManager.addLayer(
+            "terrain",
+            new TerrainLayer(
+                page.data.settings.terrain.terrain,
+                page.data.settings?.terrain?.hillshading,
+                bounds,
+            ),
+        );
+    }
+
+    function getSandboxBounds(): M.LngLatBounds | null {
+        const bounds = getBounds();
+        if (bounds.isEmpty()) {
+            return null;
+        }
+
+        const padded = padSandboxBounds([
+            bounds.getWest(),
+            bounds.getSouth(),
+            bounds.getEast(),
+            bounds.getNorth(),
+        ]);
+        return new M.LngLatBounds(padded);
     }
 
     export function refreshElevationProfile() {
@@ -873,9 +1131,9 @@
 
     onMount(async () => {
         const initialState = {
-            lng: 0,
-            lat: 0,
-            zoom: 1,
+            lng: DEFAULT_MAP_CENTER[0],
+            lat: DEFAULT_MAP_CENTER[1],
+            zoom: DEFAULT_MAP_ZOOM,
         };
         const ElevationProfileControl = (
             await import(
@@ -886,6 +1144,8 @@
         if (!mapContainer) {
             return;
         }
+
+        baseMapStyles.Tianditu = createTiandituStyle();
 
         for (const tileset of page.data.settings?.tilesets ?? []) {
             baseMapStyles[tileset.name] = tileset.url;
@@ -902,6 +1162,7 @@
         map = new M.Map(finalMapOptions);
 
         layerManager = new LayerManager(map, { overpassActionFactory: buildPoiAnchorAction });
+        activeMapStyle = layerManager.state.base;
 
         elevationMarker = new FontawesomeMarker(
             {
@@ -923,8 +1184,10 @@
 
         const switcherControl = new StyleSwitcherControl({
             styles: baseMapStyles,
-            onchange: (state) => {
+            onchange: async (state) => {
+                activeMapStyle = state.base;
                 layerManager.update(JSON.parse(JSON.stringify(state)));
+                await refreshSandboxTexture();
             },
             state: JSON.parse(JSON.stringify(layerManager.state)),
         });
@@ -953,6 +1216,7 @@
 
         if (showStyleSwitcher) {
             map.addControl(switcherControl);
+            switcherControl.getContainer()?.classList.add("sandbox-style-switcher");
         }
 
         if (showElevation) {
@@ -988,6 +1252,7 @@
             });
             toggleEpcTheme();
             map.addControl(epc);
+            epc.getContainer()?.style.setProperty("z-index", "2");
         }
 
         if (showFullscreen) {
@@ -1007,13 +1272,32 @@
             );
         }
 
+        if (showSandboxControl && showTerrain) {
+            sandboxControl = new SandboxControl(
+                toggleSandboxMode,
+                Boolean(page.data.settings?.terrain?.terrain),
+            );
+            map.addControl(sandboxControl, "top-right");
+        }
+
         map.on("styledata", (e) => {
             if (showTerrain && page.data.settings?.terrain?.terrain) {
+                const sandboxBounds = sandboxMode
+                    ? getSandboxBounds()
+                    : null;
                 layerManager.addLayer(
                     "terrain",
                     new TerrainLayer(
                         page.data.settings.terrain.terrain,
                         page.data.settings?.terrain?.hillshading,
+                        sandboxBounds
+                            ? [
+                                  sandboxBounds.getWest(),
+                                  sandboxBounds.getSouth(),
+                                  sandboxBounds.getEast(),
+                                  sandboxBounds.getNorth(),
+                              ]
+                            : undefined,
                     ),
                 );
                 syncHillshadingVisibility();
@@ -1065,6 +1349,8 @@
     }
 
     onDestroy(() => {
+        sandboxMode = false;
+        sandboxTerrain?.hide();
         map?.remove();
     });
 
@@ -1124,15 +1410,121 @@
 </script>
 
 <svelte:window on:keydown={handleKeydown} on:keyup={handleKeyup} />
-<div id="map" bind:this={mapContainer}></div>
+<div id="map-frame" class:sandbox-active={sandboxMode}>
+    {#if showSandboxControl && showTerrain && page.data.settings?.terrain?.terrain}
+        <div class="map-view-tabs" role="tablist" aria-label="Map view">
+            <button
+                type="button"
+                class:active={mapView === "map"}
+                role="tab"
+                aria-selected={mapView === "map"}
+                onclick={() => selectMapView("map")}
+            >
+                地图
+            </button>
+            <button
+                type="button"
+                class:active={mapView === "sandbox"}
+                role="tab"
+                aria-selected={mapView === "sandbox"}
+                onclick={() => selectMapView("sandbox")}
+            >
+                沙盘
+            </button>
+        </div>
+    {/if}
+    <div id="map" bind:this={mapContainer}></div>
+    <SandboxTerrainThree
+        bind:this={sandboxTerrain}
+        {map}
+        theme={$theme}
+        {waypoints}
+        showWaypoints={displayWaypoints}
+        styles={baseMapStyles}
+        selectedStyle={activeMapStyle}
+        onstylechange={changeSandboxStyle}
+        onerror={handleSandboxError}
+    ></SandboxTerrainThree>
+</div>
 
 <style lang="postcss">
     @reference "tailwindcss";
     @reference "../../../css/app.css";
 
+    #map-frame,
     #map {
         width: 100%;
         height: 100%;
+    }
+
+    #map-frame {
+        position: relative;
+        overflow: hidden;
+    }
+
+    #map-frame.sandbox-active :global(.maplibregl-ctrl-top-right),
+    #map-frame.sandbox-active :global(.maplibregl-ctrl-top-left),
+    #map-frame.sandbox-active :global(.maplibregl-ctrl-bottom-right),
+    #map-frame.sandbox-active :global(.maplibregl-ctrl-bottom-left) {
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    #map-frame.sandbox-active :global(.sandbox-style-switcher) {
+        position: absolute;
+        top: 132px;
+        right: 12px;
+        visibility: visible;
+        pointer-events: auto;
+    }
+
+    .map-view-tabs {
+        position: absolute;
+        top: 12px;
+        left: 50%;
+        z-index: 4;
+        display: flex;
+        transform: translateX(-50%);
+        overflow: hidden;
+        border: 1px solid rgb(0 0 0 / 0.14);
+        border-radius: 6px;
+        background: rgb(255 255 255 / 0.94);
+        box-shadow: 0 2px 8px rgb(0 0 0 / 0.18);
+        backdrop-filter: blur(6px);
+    }
+
+    .map-view-tabs button {
+        min-width: 64px;
+        padding: 6px 14px;
+        border: 0;
+        background: transparent;
+        color: #374151;
+        font-size: 13px;
+        line-height: 1.2;
+        cursor: pointer;
+    }
+
+    .map-view-tabs button + button {
+        border-left: 1px solid rgb(0 0 0 / 0.1);
+    }
+
+    .map-view-tabs button.active {
+        background: #3549bb;
+        color: white;
+    }
+
+    .map-view-tabs button:focus-visible {
+        outline: 2px solid #3549bb;
+        outline-offset: -2px;
+    }
+
+    :global(.dark) .map-view-tabs {
+        border-color: rgb(255 255 255 / 0.16);
+        background: rgb(31 35 45 / 0.94);
+    }
+
+    :global(.dark) .map-view-tabs button {
+        color: #e5e7eb;
     }
 
     :global(.maplibregl-popup-content) {
@@ -1145,6 +1537,10 @@
         line-height: 0;
         padding-bottom: 2.5px;
         @apply bg-menu-item-background-focus w-3 aspect-square rounded-full;
+    }
+
+    :global(.maplibregl-ctrl button.active) {
+        @apply bg-menu-item-background-focus text-primary;
     }
 
     :global(

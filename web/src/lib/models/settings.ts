@@ -24,6 +24,7 @@ class Settings {
   bio?: string | null;
   mapFocus?: "trails" | "location";
   location?: { name: string, lat: number, lon: number } | null;
+  tiandituKey?: string | null;
   tilesets?: ({ name: string, url: string }[]) | null
   terrain?: { terrain?: string, hillshading?: string } | null;
   user?: string;

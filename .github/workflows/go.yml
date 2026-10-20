@@ -2,29 +2,29 @@ name: Go
 
 on:
   push:
-    branches: [ main, dev ]
-    paths:
-      - '.github/**'
-      - 'db/**'
-      - 'plugins/**'
-      - 'Makefile'
+    branches: [main, dev]
   pull_request:
-    paths:
-      - '.github/**'
-      - 'db/**'
-      - 'plugins/**'
-      - 'Makefile'
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   db-test:
+    name: db-test
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
-      TINYGO_VERSION: '0.39.0'
+      TINYGO_VERSION: '0.41.1'
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.26'
       - name: Install TinyGo
         run: |
           curl -fsSL "https://github.com/tinygo-org/tinygo/releases/download/v${TINYGO_VERSION}/tinygo_${TINYGO_VERSION}_amd64.deb" -o /tmp/tinygo.deb
@@ -44,3 +44,41 @@ jobs:
       - run: make db-test
       - run: make plugins-test
       - run: make plugins-build
+
+  deployment-contracts:
+    name: deployment-contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Lint GitHub Actions workflows
+        run: |
+          docker run --rm \
+            -v "$PWD:/repo" \
+            -w /repo \
+            rhysd/actionlint:latest@sha256:b1934ee5f1c509618f2508e6eb47ee0d3520686341fec936f3b79331f9315667 \
+            -color .github/workflows/*.y*ml
+
+      - name: Lint deployment shell scripts
+        run: |
+          docker run --rm \
+            -v "$PWD:/mnt" \
+            koalaman/shellcheck:stable@sha256:bb596a0d169b85ddd81d8b6d3a2ff6d5baf5fca10b97f575ebc647c3dff62b3d \
+            deploy/voyagetrack-deploy \
+            deploy/voyagetrack-deploy-key \
+            deploy/voyagetrack-rollback \
+            deploy/tests/*.sh \
+            deploy/tests/fake-curl \
+            deploy/tests/fake-deploy \
+            deploy/tests/fake-docker \
+            deploy/tests/fake-sudo
+
+      - name: Validate production Compose contracts
+        run: deploy/tests/compose-test.sh
+
+      - name: Exercise deploy success and automatic rollback
+        run: deploy/tests/run.sh
+
+      - name: Validate Nginx templates
+        run: deploy/tests/nginx-test.sh

@@ -33,7 +33,8 @@ services:
     environment:
       <<: *cenv
       POCKETBASE_ENCRYPTION_KEY: fde406459dc1f6ca6f348e1f44a9a2af
-      ORIGIN: http://localhost:3000
+      POCKETBASE_PROXY_SECRET: ${POCKETBASE_PROXY_SECRET:?set POCKETBASE_PROXY_SECRET}
+      ORIGIN: https://gdxw.dpdns.org
     ports:
       - "8090:8090"
     networks:
@@ -58,8 +59,9 @@ services:
         condition: service_healthy
     environment:
       <<: *cenv
-      ORIGIN: http://localhost:3000
+      ORIGIN: https://gdxw.dpdns.org
       BODY_SIZE_LIMIT: Infinity
+      POCKETBASE_PROXY_SECRET: ${POCKETBASE_PROXY_SECRET:?set POCKETBASE_PROXY_SECRET}
       PUBLIC_POCKETBASE_URL: http://db:8090
       PUBLIC_DISABLE_SIGNUP: "false"
       UPLOAD_FOLDER: /app/uploads

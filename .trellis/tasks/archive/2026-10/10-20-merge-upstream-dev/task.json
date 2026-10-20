@@ -1,0 +1,29 @@
+{
+  "id": "merge-upstream-dev",
+  "name": "merge-upstream-dev",
+  "title": "Merge latest upstream dev",
+  "description": "Merge open-wanderer/wanderer dev into VoyageTrack while preserving local trail import, 3D sandbox, Tianditu, and deployment customizations.",
+  "status": "completed",
+  "dev_type": null,
+  "scope": null,
+  "package": null,
+  "priority": "P1",
+  "creator": "g-dxw",
+  "assignee": "g-dxw",
+  "createdAt": "2026-10-20",
+  "completedAt": "2026-10-20",
+  "branch": "dev_0.0.1",
+  "base_branch": "dev_0.0.1",
+  "worktree_path": null,
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "",
+  "meta": {
+    "upstream_ref": "refs/remotes/upstream/dev",
+    "upstream_sha": "298d3369354862d96bd1f769880a047ca90e2b2e"
+  }
+}

@@ -1,0 +1,8 @@
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend hook, migration, route, and test requirements for the upstream merge."}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend structure, auth boundary, type, unit, build, and browser-flow requirements."}
+{"file": ".trellis/spec/plugins/index.md", "reason": "Plugin SDK/provider compatibility and Go/TinyGo validation requirements."}
+{"file": ".trellis/spec/docs/index.md", "reason": "Documentation and generated OpenAPI build contract."}
+{"file": ".trellis/spec/guides/cross-layer-thinking-guide.md", "reason": "The merge spans KML parsing, rendering, persistence, migration, maps, and deployment."}
+{"file": ".trellis/tasks/10-20-merge-upstream-dev/research/upstream-dev-update.md", "reason": "Pinned upstream change inventory, security fixes, migrations, and breaking contracts."}
+{"file": ".trellis/tasks/10-20-merge-upstream-dev/research/conflict-resolution.md", "reason": "Per-file conflict and auto-merge resolution rules preserving VoyageTrack behavior."}
+{"file": ".trellis/tasks/10-20-merge-upstream-dev/research/validation-plan.md", "reason": "Toolchain-aware validation and rollback procedure."}

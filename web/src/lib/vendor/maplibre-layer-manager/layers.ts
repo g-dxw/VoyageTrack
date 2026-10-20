@@ -26,7 +26,6 @@ import TramStop from "$lib/assets/svgs/pois/tram.svg?raw"
 import BusStop from "$lib/assets/svgs/pois/bus.svg?raw"
 import Ferry from "$lib/assets/svgs/pois/ferry.svg?raw"
 import Picnic from "$lib/assets/svgs/pois/picnic.svg?raw"
-
 import type { FilterSpecification, MapMouseEvent, Marker, StyleSpecification } from "maplibre-gl"
 
 export interface BaseLayer {
@@ -41,6 +40,69 @@ export interface BaseLayer {
         onMouseMove?: (e: MapMouseEvent) => void,
     }>
 
+}
+
+export function createTiandituStyle(): StyleSpecification {
+    return {
+        version: 8,
+        sources: {
+            tianditu: {
+                type: 'raster',
+                tiles: [
+                    '/api/v1/tianditu/vec_w/{z}/{x}/{y}',
+                ],
+                tileSize: 256,
+                maxzoom: 18,
+                attribution:
+                    '&copy; <a href="https://www.tianditu.gov.cn" target="_blank">天地图</a>',
+            },
+        },
+        layers: [
+            {
+                id: 'tianditu',
+                type: 'raster',
+                source: 'tianditu',
+            },
+        ],
+    };
+}
+
+export function createTiandituSatelliteStyle(): StyleSpecification {
+    return {
+        version: 8,
+        sources: {
+            tiandituSatellite: {
+                type: 'raster',
+                tiles: [
+                    '/api/v1/tianditu/img_w/{z}/{x}/{y}',
+                ],
+                tileSize: 256,
+                maxzoom: 18,
+                attribution:
+                    '&copy; <a href="https://www.tianditu.gov.cn" target="_blank">天地图</a>',
+            },
+            tiandituSatelliteLabels: {
+                type: 'raster',
+                tiles: [
+                    '/api/v1/tianditu/cia_w/{z}/{x}/{y}',
+                ],
+                tileSize: 256,
+                maxzoom: 18,
+            },
+        },
+        layers: [
+            {
+                id: 'tianditu-satellite',
+                type: 'raster',
+                source: 'tiandituSatellite',
+            },
+            {
+                id: 'tianditu-satellite-labels',
+                type: 'raster',
+                source: 'tiandituSatelliteLabels',
+            },
+        ],
+    };
 }
 
 export const baseMapStyles: Record<string, string | StyleSpecification> = {
@@ -87,6 +149,8 @@ export const baseMapStyles: Record<string, string | StyleSpecification> = {
             },
         ],
     },
+    "Tianditu": createTiandituStyle(),
+    "Tianditu Satellite": createTiandituSatelliteStyle(),
     "CyclOSM": {
         version: 8,
         glyphs: "https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf",

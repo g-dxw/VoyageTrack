@@ -2,18 +2,22 @@ name: Web CI
 
 on:
   push:
-    branches: [ main, dev ]
-    paths:
-      - '.github/**'
-      - 'web/**'
+    branches: [main, dev]
   pull_request:
-    paths:
-      - '.github/**'
-      - 'web/**'
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: web-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
+    name: test
     runs-on: ubuntu-latest
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v7
@@ -24,15 +28,31 @@ jobs:
 
       - uses: actions/setup-go@v6
         with:
-          go-version: '1.25'
+          go-version: '1.26'
+
+      - name: Generate CI-only proxy secret
+        run: echo "POCKETBASE_PROXY_SECRET=$(openssl rand -hex 32)" >> "$GITHUB_ENV"
 
       - run: make db-build-docker
 
       - run: make web-build-docker
 
-      - run: docker compose up -d
+      - name: Start test stack
+        timeout-minutes: 15
+        run: docker compose up -d --wait --wait-timeout 840
 
       - run: make web-install
       - run: make web-playwright-install
       - run: make web-check
       - run: make web-test
+
+      - name: Upload Playwright results
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-results
+          path: |
+            web/playwright-report/
+            web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

@@ -1,0 +1,6 @@
+.env
+.release
+.nginx-test.*
+backups/
+data/
+!tests/run.sh

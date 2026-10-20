@@ -1,0 +1,390 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+readonly BASE_DIR="/srv/apps/voyagetrack"
+readonly COMPOSE_FILE="$BASE_DIR/compose.yml"
+readonly ENV_FILE="$BASE_DIR/.env"
+readonly RELEASE_FILE="$BASE_DIR/.release"
+readonly DATA_DIR="$BASE_DIR/data"
+readonly PB_DATA_DIR="$DATA_DIR/pb_data"
+readonly BACKUPS_DIR="$BASE_DIR/backups"
+readonly LOCK_FILE="/run/lock/voyagetrack-deploy.lock"
+readonly BACKUP_KEEP_COUNT=7
+
+usage() {
+  echo "Usage: $0 [--restore] <40-character-lowercase-git-sha>" >&2
+  exit 64
+}
+
+log() {
+  printf '[voyagetrack-deploy] %s\n' "$*"
+}
+
+die() {
+  printf '[voyagetrack-deploy] ERROR: %s\n' "$*" >&2
+  exit 1
+}
+
+ROLLBACK_MODE=0
+if [[ $# -eq 1 ]]; then
+  RELEASE_SHA="$1"
+elif [[ $# -eq 2 && "$1" == "--restore" ]]; then
+  ROLLBACK_MODE=1
+  RELEASE_SHA="$2"
+else
+  usage
+fi
+readonly ROLLBACK_MODE RELEASE_SHA
+[[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || usage
+readonly CANDIDATE_TAG="sha-$RELEASE_SHA"
+
+[[ ${EUID:-$(id -u)} -eq 0 ]] || die "must run as root"
+
+for command_name in awk curl docker flock install mktemp realpath tar; do
+  command -v "$command_name" >/dev/null 2>&1 || die "required command is missing: $command_name"
+done
+
+exec 9>"$LOCK_FILE"
+flock -n 9 || die "another VoyageTrack deployment is running"
+
+[[ -f "$COMPOSE_FILE" ]] || die "missing $COMPOSE_FILE"
+[[ -f "$ENV_FILE" ]] || die "missing $ENV_FILE"
+[[ ! -L "$COMPOSE_FILE" && ! -L "$ENV_FILE" && ! -L "$RELEASE_FILE" ]] || die "deployment state files must not be symlinks"
+
+assert_managed_directory() {
+  local path="$1"
+  local resolved_path
+
+  [[ ! -L "$path" ]] || die "managed directory must not be a symlink: $path"
+  resolved_path=$(realpath -m "$path")
+  [[ "$resolved_path" == "$path" ]] || die "managed directory resolves outside its fixed path: $path"
+}
+
+for managed_directory in \
+  "$BASE_DIR" \
+  "$DATA_DIR" \
+  "$PB_DATA_DIR" \
+  "$DATA_DIR/uploads" \
+  "$DATA_DIR/plugins" \
+  "$DATA_DIR/meili_data" \
+  "$BACKUPS_DIR"; do
+  assert_managed_directory "$managed_directory"
+done
+
+install -d -m 0750 -o root -g root "$BASE_DIR" "$DATA_DIR" "$PB_DATA_DIR" \
+  "$DATA_DIR/uploads" "$DATA_DIR/plugins" "$DATA_DIR/meili_data" "$BACKUPS_DIR"
+chown root:root "$ENV_FILE"
+chmod 0600 "$ENV_FILE"
+
+get_env_value() {
+  local key="$1"
+  awk -v key="$key" '
+    index($0, key "=") == 1 {
+      sub(/^[^=]*=/, "")
+      sub(/\r$/, "")
+      print
+      exit
+    }
+  ' "$ENV_FILE"
+}
+
+require_env_value() {
+  local key="$1"
+  local value
+  value=$(get_env_value "$key")
+  [[ -n "$value" ]] || die "$key must be set in $ENV_FILE"
+  printf '%s' "$value"
+}
+
+set_env_value() {
+  local key="$1"
+  local value="$2"
+  local temporary
+  temporary=$(mktemp "$BASE_DIR/.env.tmp.XXXXXX")
+  chmod 0600 "$temporary"
+
+  awk -v key="$key" -v value="$value" '
+    BEGIN { replaced = 0 }
+    index($0, key "=") == 1 {
+      if (!replaced) {
+        print key "=" value
+        replaced = 1
+      }
+      next
+    }
+    { print }
+    END {
+      if (!replaced) print key "=" value
+    }
+  ' "$ENV_FILE" > "$temporary"
+
+  chown root:root "$temporary"
+  mv -f "$temporary" "$ENV_FILE"
+}
+
+remove_env_value() {
+  local key="$1"
+  local temporary
+  temporary=$(mktemp "$BASE_DIR/.env.tmp.XXXXXX")
+  chmod 0600 "$temporary"
+  awk -v key="$key" 'index($0, key "=") != 1 { print }' "$ENV_FILE" > "$temporary"
+  chown root:root "$temporary"
+  mv -f "$temporary" "$ENV_FILE"
+}
+
+get_metadata_value() {
+  local metadata_file="$1"
+  local key="$2"
+  awk -v key="$key" '
+    index($0, key "=") == 1 {
+      sub(/^[^=]*=/, "")
+      sub(/\r$/, "")
+      print
+      exit
+    }
+  ' "$metadata_file"
+}
+
+find_rollback_backup() {
+  local target_release="$1"
+  local current_release="$2"
+  local metadata_file backup_file metadata_previous metadata_candidate
+
+  while IFS= read -r metadata_file; do
+    metadata_previous=$(get_metadata_value "$metadata_file" previous_release)
+    metadata_candidate=$(get_metadata_value "$metadata_file" candidate_release)
+    [[ "$metadata_previous" == "$target_release" ]] || continue
+    [[ "$metadata_candidate" == "$current_release" ]] || continue
+
+    backup_file="${metadata_file%.meta}.tar.gz"
+    [[ -f "$backup_file" && ! -L "$backup_file" ]] || continue
+    printf '%s\n' "$backup_file"
+    return 0
+  done < <(find "$BACKUPS_DIR" -maxdepth 1 -type f -name 'pb_data-*.meta' -print | sort -r)
+
+  return 1
+}
+
+compose_for() {
+  local image_tag="$1"
+  shift
+  ORIGIN="$ORIGIN_VALUE" \
+    MEILI_MASTER_KEY="$MEILI_KEY" \
+    POCKETBASE_ENCRYPTION_KEY="$ENCRYPTION_KEY" \
+    POCKETBASE_PROXY_SECRET="$PROXY_SECRET" \
+    IMAGE_TAG="$image_tag" \
+    docker compose \
+    --project-name voyagetrack \
+    --env-file "$ENV_FILE" \
+    --file "$COMPOSE_FILE" \
+    "$@"
+}
+
+verify_services() {
+  curl --fail --silent --show-error \
+    --retry 10 --retry-delay 3 --retry-all-errors \
+    --connect-timeout 3 --max-time 10 \
+    http://127.0.0.1:13000/ >/dev/null
+  curl --fail --silent --show-error \
+    --retry 10 --retry-delay 3 --retry-all-errors \
+    --connect-timeout 3 --max-time 10 \
+    http://127.0.0.1:18090/health >/dev/null
+}
+
+write_release() {
+  local sha="$1"
+  local temporary
+  temporary=$(mktemp "$BASE_DIR/.release.tmp.XXXXXX")
+  printf '%s\n' "$sha" > "$temporary"
+  chmod 0644 "$temporary"
+  chown root:root "$temporary"
+  mv -f "$temporary" "$RELEASE_FILE"
+}
+
+restore_pb_data() {
+  local backup_path="$1"
+  local resolved_pb_dir
+  resolved_pb_dir=$(realpath -m "$PB_DATA_DIR")
+  if [[ "$resolved_pb_dir" != "/srv/apps/voyagetrack/data/pb_data" ]]; then
+    echo "refusing to restore unexpected path: $resolved_pb_dir" >&2
+    return 1
+  fi
+  if [[ ! -f "$backup_path" ]]; then
+    echo "rollback backup is missing: $backup_path" >&2
+    return 1
+  fi
+
+  find "$PB_DATA_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+  tar -C "$DATA_DIR" -xzf "$backup_path"
+}
+
+prune_backups() {
+  local -a backups=()
+  local remove_count index
+  mapfile -t backups < <(find "$BACKUPS_DIR" -maxdepth 1 -type f -name 'pb_data-*.tar.gz' -print | sort)
+  remove_count=$((${#backups[@]} - BACKUP_KEEP_COUNT))
+  if (( remove_count > 0 )); then
+    for ((index = 0; index < remove_count; index++)); do
+      rm -f -- "${backups[$index]}" "${backups[$index]%.tar.gz}.meta"
+    done
+  fi
+}
+
+prune_old_project_images() {
+  local previous_tag="$1"
+  local image_ref tag
+
+  while IFS= read -r image_ref; do
+    [[ "$image_ref" =~ ^ghcr\.io/g-dxw/voyagetrack-(db|web):(sha-[0-9a-f]{40})$ ]] || continue
+    tag="${BASH_REMATCH[2]}"
+    [[ "$tag" == "$CANDIDATE_TAG" || "$tag" == "$previous_tag" ]] && continue
+    docker image rm "$image_ref" >/dev/null 2>&1 || true
+  done < <(docker image ls --format '{{.Repository}}:{{.Tag}}')
+}
+
+verify_image_revision() {
+  local image_ref="$1"
+  local revision
+
+  revision=$(docker image inspect \
+    --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
+    "$image_ref") || die "could not inspect pulled image: $image_ref"
+  [[ "$revision" == "$RELEASE_SHA" ]] || die "image revision does not match requested release: $image_ref"
+}
+
+ORIGIN_VALUE=$(require_env_value ORIGIN)
+MEILI_KEY=$(require_env_value MEILI_MASTER_KEY)
+ENCRYPTION_KEY=$(require_env_value POCKETBASE_ENCRYPTION_KEY)
+PROXY_SECRET=$(require_env_value POCKETBASE_PROXY_SECRET)
+readonly ORIGIN_VALUE MEILI_KEY ENCRYPTION_KEY PROXY_SECRET
+
+[[ "$ORIGIN_VALUE" =~ ^https://[^/]+/?$ ]] || die "ORIGIN must be one HTTPS origin without a path"
+[[ ${#MEILI_KEY} -ge 32 ]] || die "MEILI_MASTER_KEY must be at least 32 characters"
+[[ ${#ENCRYPTION_KEY} -eq 32 ]] || die "POCKETBASE_ENCRYPTION_KEY must be exactly 32 characters"
+[[ ${#PROXY_SECRET} -ge 32 ]] || die "POCKETBASE_PROXY_SECRET must be at least 32 characters"
+
+previous_tag=$(get_env_value IMAGE_TAG)
+previous_release=""
+if [[ -f "$RELEASE_FILE" ]]; then
+  previous_release=$(tr -d '\r\n' < "$RELEASE_FILE")
+  [[ "$previous_release" =~ ^[0-9a-f]{40}$ ]] || die "$RELEASE_FILE does not contain a valid release SHA"
+fi
+
+if [[ -n "$previous_tag" ]]; then
+  [[ "$previous_tag" =~ ^sha-[0-9a-f]{40}$ ]] || die "existing IMAGE_TAG is not immutable: $previous_tag"
+  if [[ -z "$previous_release" ]]; then
+    previous_release="${previous_tag#sha-}"
+  elif [[ "$previous_tag" != "sha-$previous_release" ]]; then
+    die "IMAGE_TAG and .release identify different releases"
+  fi
+elif [[ -n "$previous_release" ]]; then
+  previous_tag="sha-$previous_release"
+fi
+
+rollback_source_backup=""
+if (( ROLLBACK_MODE == 1 )); then
+  [[ -n "$previous_release" ]] || die "cannot restore a historical backup before the first successful release"
+  [[ "$RELEASE_SHA" != "$previous_release" ]] || die "requested rollback release is already active"
+  rollback_source_backup=$(find_rollback_backup "$RELEASE_SHA" "$previous_release") || \
+    die "no backup maps active release $previous_release back to $RELEASE_SHA"
+fi
+readonly rollback_source_backup
+
+log "validating production configuration"
+compose_for "$CANDIDATE_TAG" config --quiet
+
+log "pulling immutable images for $RELEASE_SHA"
+compose_for "$CANDIDATE_TAG" pull search db web
+verify_image_revision "ghcr.io/g-dxw/voyagetrack-db:$CANDIDATE_TAG"
+verify_image_revision "ghcr.io/g-dxw/voyagetrack-web:$CANDIDATE_TAG"
+
+timestamp=$(date -u +%Y%m%dT%H%M%S%NZ)
+backup_path="$BACKUPS_DIR/pb_data-$timestamp-${previous_release:-initial}.tar.gz"
+backup_meta="${backup_path%.tar.gz}.meta"
+backup_ready=0
+cutover_started=0
+
+rollback() {
+  local exit_code=$?
+  local rollback_failed=0
+  trap - ERR INT TERM
+  set +e
+  (( exit_code == 0 )) && exit_code=1
+
+  if (( cutover_started == 1 )); then
+    log "deployment failed; rolling back"
+    if ! compose_for "$CANDIDATE_TAG" stop web db >/dev/null 2>&1; then
+      echo "[voyagetrack-deploy] ERROR: candidate writers could not be stopped; persistent data was not restored" >&2
+      rollback_failed=1
+    fi
+
+    if (( backup_ready == 1 && rollback_failed == 0 )); then
+      restore_pb_data "$backup_path" || rollback_failed=1
+    fi
+
+    if (( rollback_failed == 0 )); then
+      if [[ -n "$previous_tag" ]]; then
+        set_env_value IMAGE_TAG "$previous_tag" || rollback_failed=1
+      else
+        remove_env_value IMAGE_TAG || rollback_failed=1
+      fi
+
+      if (( rollback_failed == 0 )) && [[ -n "$previous_tag" ]]; then
+        compose_for "$previous_tag" up -d --remove-orphans --wait --wait-timeout 240 || rollback_failed=1
+        verify_services || rollback_failed=1
+      fi
+
+      if (( rollback_failed == 0 )); then
+        if [[ -n "$previous_release" ]]; then
+          write_release "$previous_release" || rollback_failed=1
+        else
+          rm -f -- "$RELEASE_FILE" || rollback_failed=1
+        fi
+      fi
+    fi
+
+    if (( rollback_failed == 1 )); then
+      echo "[voyagetrack-deploy] ERROR: automatic rollback failed; manual recovery is required before another deployment" >&2
+      exit 2
+    fi
+
+    log "rollback to ${previous_release:-the pre-deployment empty state} is healthy"
+  fi
+
+  exit "$exit_code"
+}
+trap rollback ERR INT TERM
+
+log "stopping application writers for a consistent PocketBase backup"
+cutover_started=1
+compose_for "${previous_tag:-$CANDIDATE_TAG}" stop web db
+
+tar --numeric-owner -C "$DATA_DIR" -czf "$backup_path" pb_data
+chmod 0600 "$backup_path"
+{
+  printf 'created_utc=%s\n' "$timestamp"
+  printf 'previous_release=%s\n' "${previous_release:-none}"
+  printf 'candidate_release=%s\n' "$RELEASE_SHA"
+} > "$backup_meta"
+chmod 0600 "$backup_meta"
+backup_ready=1
+
+if (( ROLLBACK_MODE == 1 )); then
+  log "restoring PocketBase snapshot for release $RELEASE_SHA"
+  restore_pb_data "$rollback_source_backup"
+fi
+
+log "starting release $RELEASE_SHA"
+set_env_value IMAGE_TAG "$CANDIDATE_TAG"
+compose_for "$CANDIDATE_TAG" up -d --remove-orphans --wait --wait-timeout 240
+verify_services
+write_release "$RELEASE_SHA"
+
+cutover_started=0
+trap - ERR INT TERM
+
+prune_backups || log "warning: old backup pruning failed"
+prune_old_project_images "$previous_tag" || log "warning: old image pruning failed"
+
+log "release $RELEASE_SHA is healthy"

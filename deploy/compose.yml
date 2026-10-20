@@ -1,0 +1,101 @@
+name: voyagetrack
+
+x-common-environment: &common-environment
+  MEILI_URL: http://search:7700
+  MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?set MEILI_MASTER_KEY}
+
+x-common-logging: &common-logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
+services:
+  search:
+    image: getmeili/meilisearch:v1.36.0
+    restart: unless-stopped
+    environment:
+      <<: *common-environment
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - ./data/meili_data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:7700/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    mem_limit: 384m
+    pids_limit: 256
+    logging: *common-logging
+
+  db:
+    image: ghcr.io/g-dxw/voyagetrack-db:${IMAGE_TAG:?set IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      search:
+        condition: service_healthy
+    environment:
+      <<: *common-environment
+      ORIGIN: ${ORIGIN:?set ORIGIN}
+      POCKETBASE_ENCRYPTION_KEY: ${POCKETBASE_ENCRYPTION_KEY:?set POCKETBASE_ENCRYPTION_KEY}
+      POCKETBASE_PROXY_SECRET: ${POCKETBASE_PROXY_SECRET:?set POCKETBASE_PROXY_SECRET}
+    volumes:
+      - ./data/pb_data:/pb_data
+      - ./data/plugins:/data/plugins
+    ports:
+      - "127.0.0.1:18090:8090"
+    healthcheck:
+      test: ["CMD", "/curl", "--fail", "http://127.0.0.1:8090/health"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    stop_grace_period: 45s
+    mem_limit: 512m
+    pids_limit: 256
+    logging: *common-logging
+
+  web:
+    image: ghcr.io/g-dxw/voyagetrack-web:${IMAGE_TAG:?set IMAGE_TAG}
+    restart: unless-stopped
+    depends_on:
+      search:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    environment:
+      <<: *common-environment
+      ORIGIN: ${ORIGIN:?set ORIGIN}
+      BODY_SIZE_LIMIT: ${BODY_SIZE_LIMIT:-Infinity}
+      POCKETBASE_PROXY_SECRET: ${POCKETBASE_PROXY_SECRET:?set POCKETBASE_PROXY_SECRET}
+      PUBLIC_POCKETBASE_URL: http://db:8090
+      PUBLIC_DISABLE_SIGNUP: ${PUBLIC_DISABLE_SIGNUP:-false}
+      PUBLIC_PRIVATE_INSTANCE: ${PUBLIC_PRIVATE_INSTANCE:-false}
+      PUBLIC_MAP_MAX_POLYLINES: ${PUBLIC_MAP_MAX_POLYLINES:-100}
+      PUBLIC_TIANDITU_KEY: ${PUBLIC_TIANDITU_KEY:-}
+      UPLOAD_FOLDER: /app/uploads
+      UPLOAD_USER: ${UPLOAD_USER:-}
+      UPLOAD_PASSWORD: ${UPLOAD_PASSWORD:-}
+      OVERPASS_API_URL: ${OVERPASS_API_URL:-https://overpass-api.de}
+      VALHALLA_URL: ${VALHALLA_URL:-https://valhalla1.openstreetmap.de}
+      NOMINATIM_URL: ${NOMINATIM_URL:-https://nominatim.openstreetmap.org}
+    volumes:
+      - ./data/uploads:/app/uploads
+    ports:
+      - "127.0.0.1:13000:3000"
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://127.0.0.1:3000/"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    stop_grace_period: 30s
+    mem_limit: 384m
+    pids_limit: 256
+    logging: *common-logging
+
+networks:
+  default:
+    name: voyagetrack-internal

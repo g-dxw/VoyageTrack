@@ -8,15 +8,24 @@ permissions: {}
 
 jobs:
   check-source:
+    name: check-source
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Verify head branch is a release branch
+      - name: Verify head branch is repository dev
         env:
           HEAD_REF: ${{ github.head_ref }}
+          HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
+          TARGET_REPOSITORY: ${{ github.repository }}
         run: |
-          if [[ "$HEAD_REF" == release/v* ]]; then
-            echo "OK: $HEAD_REF is allowed to merge into main"
-          else
-            echo "::error::PRs into main must come from a release/v* branch (got '$HEAD_REF'). Open your PR against 'dev' instead."
+          if [[ "$HEAD_REF" != "dev" ]]; then
+            echo "::error::PRs into main must come from the dev branch (got '$HEAD_REF')."
             exit 1
           fi
+
+          if [[ "$HEAD_REPOSITORY" != "$TARGET_REPOSITORY" ]]; then
+            echo "::error::The dev branch must belong to $TARGET_REPOSITORY (got '$HEAD_REPOSITORY')."
+            exit 1
+          fi
+
+          echo "OK: $TARGET_REPOSITORY:$HEAD_REF is allowed to merge into main"
