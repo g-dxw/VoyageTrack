@@ -11,6 +11,8 @@ The backend is the Go module in `db/`, built on PocketBase. It owns collection s
 | [Error Handling](./error-handling.md) | Returning request errors or handling background failures |
 | [Logging Guidelines](./logging-guidelines.md) | Adding operational logging |
 | [Quality Guidelines](./quality-guidelines.md) | Testing or reviewing Go changes |
+| [Rich-Text Sanitization](./rich-text-sanitization.md) | Importing, persisting, migrating, or rendering rich HTML |
+| [ActivityPub Proxy Secret](./activitypub-proxy-secret.md) | Changing inbound federation proxying or deployment secrets |
 
 ## Pre-Development Checklist
 

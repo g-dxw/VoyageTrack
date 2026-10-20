@@ -18,6 +18,7 @@ The frontend is a SvelteKit 2 application in `web/`, using Svelte 5, TypeScript,
 - Locate the route under `web/src/routes/` and reuse existing `+page.ts`, `+page.server.ts`, or `+server.ts` data flow.
 - Check whether shared behavior belongs in `web/src/lib/components`, `models`, `stores`, `server`, or `util`.
 - Preserve auth/CSRF behavior in `web/src/hooks.server.ts` and client-only boundaries in `web/src/lib/pocketbase.ts`.
+- Follow the backend [Rich-Text Sanitization Contract](../backend/rich-text-sanitization.md) for every `{@html}` or `innerHTML` sink.
 - Reuse i18n keys and existing base components before adding UI primitives.
 - Add a Vitest test for pure model/util behavior and Playwright coverage for critical user flows.
 
