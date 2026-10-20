@@ -266,7 +266,7 @@ pull_prebuilt_image() {
     mirror_ref="$mirror/$source_path"
     for attempt in 1 2; do
       log "pulling $official_ref through $mirror (attempt $attempt)"
-      if docker pull --quiet --platform linux/amd64 "$mirror_ref" >/dev/null; then
+      if docker pull --platform linux/amd64 "$mirror_ref"; then
         docker tag "$mirror_ref" "$official_ref"
         return 0
       fi
