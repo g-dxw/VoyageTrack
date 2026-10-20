@@ -57,6 +57,7 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 ## 6. Tests required
 
 - Run `actionlint`, ShellCheck, Bash syntax checks, YAML parsing, and `docker compose config --quiet` contract tests.
+- Verify every script invoked by a workflow is tracked by Git; repository-wide ignore rules such as `run.sh` can silently omit a local test runner.
 - Run focused tests for restricted SSH parsing, first-deploy failure, image revision mismatch, symlink rejection, successful deploy, automatic rollback, manual data rollback, and stop-failure restore safety.
 - Run Go vet/test/build, plugin tests and WASM builds, Svelte checks/tests/build, docs build, and CI Playwright coverage.
 - Before enabling production, create a non-`dev` probe PR and observe `check-source` fail; then close it.
