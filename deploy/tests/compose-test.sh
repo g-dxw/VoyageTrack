@@ -47,6 +47,7 @@ env \
   "${compose[@]}" --env-file /dev/null -f "$COMPOSE_FILE" config --format json |
   jq -e --arg expected_tag "$TEST_TAG" '
     .services.db.environment.POCKETBASE_PROXY_SECRET == .services.web.environment.POCKETBASE_PROXY_SECRET and
+    .services.search.image == "ghcr.io/g-dxw/voyagetrack-db:meilisearch-v1.36.0" and
     .services.db.image == ("ghcr.io/g-dxw/voyagetrack-db:" + $expected_tag) and
     .services.web.image == ("ghcr.io/g-dxw/voyagetrack-web:" + $expected_tag) and
     .services.search.ports == null and
