@@ -2,6 +2,12 @@
 
 ## Authorized production release preflight (2026-10-24)
 
+### Full-suite compatibility follow-up
+
+- PR31's Go/deployment/source checks passed. Web CI exposed additional legacy selectors still expecting old accessible names; the two obsolete Web runs were cancelled rather than bypassed. Updated editor/pagination fixtures to literal translation keys, and real list page objects to the English catalog's menu/cover/empty-state names. Homepage error checking now validates the document status rather than only an obsolete English error phrase.
+- All82 component browser tests passed in production mode. The suspected registration error-toast translation mismatch was disproved by its actual random-account regression: failed language saving leaves account language English, so the original English assertion correctly passes and remains unchanged.
+- Added suite-wide `WANDERER_TEST_BASE_URL` support (default remains CI's localhost3000). Created separate temporary in-memory PocketBase/Meilisearch containers for full-suite execution, with no existing local/production database mounted. Initial full run:107 passed, homepage positive assertion needed a wrapper-independent locator, location search failed because this host cannot fetch external Nominatim, and dependent teardown did not run. No test was weakened or skipped in CI; the corrected full CI remains the release gate.
+
 - User authorized latest-code deployment to `track.cqaiclub.online`, explicitly superseding earlier local-only scope. DNS A verified as `49.234.192.148`. Existing production release was `3935b6c9a1ecc54a23fdb1576fcabdb818b8bef2`; protected main and required `check-source`, `db-test`, `deployment-contracts`, `test` remain enforced for administrators.
 - Added separate hostname HTTP/TLS templates and expanded Nginx contract tests. Dedicated certificate issued (expires 2027-01-22), HTTP returns308 to HTTPS, public trusted HTTPS returns200. Initial ACME secondary-region timeout resolved on one bounded retry without firewall changes.
 - Backed up HTTP bootstrap and root-only runtime environment under `/srv/apps/voyagetrack/backups/domain-20261024/`. Only production `.env` ORIGIN changed to `https://track.cqaiclub.online`; runtime secrets/data/other services unchanged. Existing active certbot timer and global validated Nginx reload hook retained.
