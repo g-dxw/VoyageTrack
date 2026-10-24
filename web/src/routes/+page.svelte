@@ -1,5 +1,6 @@
 <script lang="ts">
     import { sanitizeHTML } from "$lib/util/sanitize_html";
+    import { localizeAboutMarkdown } from "$lib/i18n/about";
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
     import emptyStateTrailDark from "$lib/assets/svgs/empty_states/empty_state_trail_dark.svg";
@@ -44,14 +45,17 @@
 
     let loading: boolean = false;
 
-    let about: string = $state("");
+    let aboutMarkdown = $state<string | null>(null);
+    const about = $derived(marked.parse(
+        localizeAboutMarkdown(aboutMarkdown, $_("about-content")),
+        { async: false },
+    ));
 
     onMount(async () => {
         try {
             const markdownResponse = await fetch("/md/about.md");
             if (markdownResponse.ok) {
-                const text = await markdownResponse.text();
-                about = await marked.parse(text);
+                aboutMarkdown = await markdownResponse.text();
             }
         } catch (e) {
             console.warn(e);
@@ -92,13 +96,13 @@
             });
             const trailItems = r[0].hits.map((t: TrailSearchResult) => ({
                 text: t.name,
-                description: `Trail ${t.location.length ? ", " + t.location : ""}`,
+                description: `${$_("trail", { values: { n: 1 } })}${t.location.length ? ", " + t.location : ""}`,
                 value: `@${t.author_name}${t.domain ? `@${t.domain}` : ""}/${t.id}`,
                 icon: "route",
             }));
             const listItems = r[1].hits.map((t: ListSearchResult) => ({
                 text: t.name,
-                description: `List, ${t.trails} ${$_("trail", { values: { n: t.trails } })}`,
+                description: `${$_("list", { values: { n: 1 } })}, ${t.trails} ${$_("trail", { values: { n: t.trails } })}`,
                 value: `@${t.author_name}${t.domain ? `@${t.domain}` : ""}/${t.id}`,
                 icon: "layer-group",
             }));
@@ -150,18 +154,17 @@
 </script>
 
 <svelte:head>
-    <title>Home | wanderer</title>
+    <title>{$_("home")} | wanderer</title>
 </svelte:head>
 
 <svelte:window onscroll={onScroll} />
 
 <section
     class="hero grid grid-cols-1 lg:grid-cols-2 lg:px-8 gap-4 lg:gap-8"
-    style="min-height: calc(100vh - 112px)"
 >
     <div
-        class="flex flex-col justify-center gap-8 px-8 lg:px-24 mt-0 lg:sticky"
-        style="max-height: calc(100vh - 112px); top: 112px;"
+        class="flex flex-col justify-center gap-5 px-5 py-8 lg:px-24 lg:py-10 mt-0 lg:sticky"
+        style="top: var(--app-header-height)"
     >
         <h2 class="text-5xl sm:text-6xl lg:text-7xl font-bold">
             {$_("welcome_to")} <span class="-tracking-[0.075em]">wanderer</span>
@@ -193,8 +196,8 @@
 </section>
 {#if !page.data.user}
     <div
-        class="hidden lg:block w-full fixed top-[112px] -z-10"
-        style="min-height: calc(100vh - 112px)"
+        class="hidden lg:block w-full fixed -z-10"
+        style="top: var(--app-header-height); min-height: calc(100dvh - var(--app-header-height))"
     >
         <div class="invisible dark:visible">
             <StarSky></StarSky>
@@ -207,20 +210,20 @@
                 <enhanced:img
                     class="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 max-h-3/4"
                     src="/static/models/wanderer_diorama_light.png"
-                    alt="wanderer Diorama"
+                    alt={$_("wanderer-diorama")}
                 />
             {:else}
                 <enhanced:img
                     class="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 max-h-3/4"
                     src="/static/models/wanderer_diorama_dark.png"
-                    alt="wanderer Diorama"
+                    alt={$_("wanderer-diorama")}
                 />
             {/if}
         </div>
     </div>
-    <section class="lg:px-8 lg:max-w-1/2 mb-24" id="about">
-        <div class="px-8 lg:px-24">
-            <h2 class="text-4xl lg:text-5xl font-bold mt-1 mb-8">
+    <section class="lg:px-8 lg:max-w-1/2 mb-12 lg:mb-16" id="about">
+        <div class="px-5 lg:px-24">
+            <h2 class="text-4xl lg:text-5xl font-bold mt-1 mb-4">
                 {$_("about")}
             </h2>
             <div class="prose dark:prose-invert">
@@ -228,8 +231,8 @@
             </div>
         </div>
     </section>
-    <section class="lg:px-8 lg:max-w-1/2 mb-24" id="trails">
-        <div class="px-8 lg:px-24 space-y-4">
+    <section class="lg:px-8 lg:max-w-1/2 mb-12 lg:mb-16" id="trails">
+        <div class="px-5 lg:px-24 space-y-3">
             <h2 class="text-4xl lg:text-5xl font-bold">
                 {$_("explore-some-trails")}
             </h2>
@@ -243,7 +246,7 @@
                     src={$theme === "light"
                         ? emptyStateTrailLight
                         : emptyStateTrailDark}
-                    alt="Empty state"
+                    alt={$_("empty-trails-illustration")}
                 />
             {:else}
                 {#each data.trails as trail}
@@ -264,15 +267,23 @@
             {/if}
         </div>
     </section>
-    <section id="get-started" class="lg:px-8 lg:max-w-1/2 mb-24">
-        <div class="px-8 lg:px-24 space-y-4 text-center">
+    <section id="get-started" class="lg:px-8 lg:max-w-1/2 mb-12 lg:mb-16">
+        <div class="px-5 lg:px-24 space-y-3 text-center">
             <h2 class="text-4xl lg:text-5xl font-bold">{$_("get-started")}</h2>
             <p>{$_("ready-to-join")}?</p>
             <a
                 class="inline-block btn-primary btn-large"
                 href="/login"
-                role="button">Signup or Login</a
+                role="button">{$_("signup-or-login")}</a
             >
         </div>
     </section>
 {/if}
+
+<style>
+    @media (min-width: 64rem) {
+        .hero {
+            min-height: min(34rem, calc(100svh - var(--app-header-height)));
+        }
+    }
+</style>

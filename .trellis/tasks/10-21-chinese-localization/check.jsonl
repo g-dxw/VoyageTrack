@@ -1,0 +1,2 @@
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Catalog coverage, frontend tests and UI verification"}
+{"file":".trellis/spec/frontend/type-safety.md","reason":"Preserve typed component and utility interfaces"}

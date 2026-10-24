@@ -29,7 +29,7 @@
 >
     {#if items.length == 0}
         <li
-            class="menu-item flex items-center px-4 py-3 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
+            class="menu-item flex min-h-11 sm:min-h-9 items-center px-3 py-1.5 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
         >
             {$_("no-results")}
         </li>
@@ -38,7 +38,7 @@
         <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
         <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
         <li
-            class="menu-item flex items-center px-4 py-3 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
+            class="menu-item flex min-h-11 sm:min-h-9 items-center px-3 py-1.5 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
             tabindex="0"
             onmousedown={(e) => onclick?.(e, item)}
             onkeydown={(e) => onclick?.(e, item)}
@@ -46,15 +46,15 @@
             {#if prepend}{@render prepend({ item })}
             {:else if isURL(item.icon)}
                 <img
-                    class="rounded-full w-8 mr-4 aspect-square"
+                    class="rounded-full w-8 mr-3 shrink-0 aspect-square"
                     src={item.icon}
-                    alt="avatar"
+                    alt={$_("avatar")}
                 />
             {:else}
                 <i class="fa fa-{item.icon} basis-8 shrink-0"></i>
             {/if}
 
-            <div>
+            <div class="min-w-0 break-words">
                 <p>{item.text}</p>
                 {#if item.description}
                     <p class="text-sm text-gray-500">

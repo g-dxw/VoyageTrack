@@ -64,7 +64,7 @@ meili_key=$(openssl rand -hex 32)
 pocketbase_key=$(openssl rand -hex 16)
 proxy_secret=$(openssl rand -hex 32)
 {
-  printf "ORIGIN=https://gdxw.dpdns.org\n"
+  printf "ORIGIN=https://track.cqaiclub.online\n"
   printf "MEILI_MASTER_KEY=%s\n" "$meili_key"
   printf "POCKETBASE_ENCRYPTION_KEY=%s\n" "$pocketbase_key"
   printf "POCKETBASE_PROXY_SECRET=%s\n" "$proxy_secret"
@@ -135,6 +135,29 @@ public images through `ghcr.1ms.run`, with `ghcr.nju.edu.cn` as a fallback,
 then validates the project image revision labels before any service is stopped.
 
 ## Nginx and TLS
+
+The canonical production origin is `https://track.cqaiclub.online`, resolving
+to `49.234.192.148`. The older `gdxw.dpdns.org` templates remain available for
+legacy installations; do not replace another site's virtual host.
+
+For this hostname, first install
+`nginx/track.cqaiclub.online-http-bootstrap.conf` as its own enabled Nginx
+site, run `nginx -t` and reload. Obtain its certificate using the existing
+Certbot installation and HTTP challenge webroot `/var/www/html`:
+
+```bash
+sudo certbot certonly --webroot -w /var/www/html \
+  -d track.cqaiclub.online --cert-name track.cqaiclub.online \
+  --non-interactive --agree-tos
+```
+
+Reuse the existing registered ACME account. Only after the certificate exists,
+install `nginx/track.cqaiclub.online.conf`, validate and reload Nginx. Ensure
+the existing renewal timer also reloads Nginx after successful renewal.
+Before switching an existing instance, retain a root-only backup of `.env`,
+update only `ORIGIN` (not encryption/proxy/search keys), and recreate both web
+and database through the immutable-image deployment pipeline. Never copy a
+local database or run an application build on production.
 
 Only the web service is published through Nginx at `127.0.0.1:13000`.
 PocketBase diagnostics stay on `127.0.0.1:18090`; Meilisearch has no host port.

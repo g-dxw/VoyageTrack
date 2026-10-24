@@ -42,7 +42,7 @@
         } catch (e) {
             show_toast({
                 icon: "close",
-                text: "Error loading trails.",
+                text: $_("error-loading-trails"),
                 type: "error",
             });
         } finally {

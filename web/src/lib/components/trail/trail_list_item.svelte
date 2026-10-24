@@ -67,21 +67,21 @@
 </script>
 
 <li
-    class="flex gap-8 p-4 rounded-xl border border-input-border cursor-pointer hover:bg-secondary-hover transition-colors items-center"
+    class="flex gap-3 sm:gap-4 p-3 rounded-xl border border-input-border cursor-pointer hover:bg-secondary-hover transition-colors items-center"
     class:bg-secondary-hover={selected}
 >
     <div class="shrink-0">
         {#if isVideoURL(thumbnail)}
             <!-- svelte-ignore a11y_media_has_caption -->
             <video
-                class="h-28 w-28 object-cover rounded-xl"
+                class="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-xl"
                 autoplay
                 loop
                 src={thumbnail}
             ></video>
         {:else}
             <img
-                class="h-28 w-28 object-cover rounded-xl"
+                class="h-16 w-16 sm:h-20 sm:w-20 object-cover rounded-xl"
                 src={thumbnail}
                 alt=""
             />
@@ -116,8 +116,8 @@
             </div>
         </div>
         {#if trail.date}
-            <p class="text-xs text-gray-500 mb-3">
-                {new Date(trail.date).toLocaleDateString(undefined, {
+            <p class="text-xs text-gray-500 mb-2">
+                {new Date(trail.date).toLocaleDateString($locale ?? undefined, {
                     month: "long",
                     day: "2-digit",
                     year: "numeric",
@@ -126,19 +126,19 @@
             </p>
         {/if}
         {#if trail.expand?.author}
-            <p class="text-xs text-gray-500 mb-3">
+            <p class="text-xs text-gray-500 mb-2">
                 {$_("by")}
                 <img
                     class="rounded-full w-5 aspect-square mx-1 inline"
                     src={trail.expand.author.icon ||
                         `https://api.dicebear.com/7.x/initials/svg?seed=${trail.expand.author.preferred_username}&backgroundType=gradientLinear`}
-                    alt="avatar"
+                    alt={$_("avatar")}
                 />
                 {handleFromRecordWithIRI(trail)}
             </p>
         {/if}
         {#if trail.tags.length && trail.expand?.tags}
-            <div class="flex flex-wrap gap-1 mb-3 items-center">
+            <div class="flex flex-wrap gap-1 mb-2 items-center">
                 {#each expandedTags ? trail.expand.tags : trail.expand.tags.slice(0, 2) as tag}
                     <Chip text={tag.name} closable={false} primary={false}
                     ></Chip>
@@ -151,15 +151,15 @@
                         type="button"
                     >
                         {#if expandedTags}
-                            Show less
+                            {$_("show-less")}
                         {:else}
-                            +{trail.expand.tags.length - 2} more
+                            +{trail.expand.tags.length - 2} {$_("more")}
                         {/if}
                     </button>
                 {/if}
             </div>
         {/if}
-        <div class="flex flex-wrap gap-x-8 gap-y-1">
+        <div class="flex flex-wrap gap-x-4 gap-y-1">
             {#if trail.expand?.category?.name || trail.category}
                 <p>
                     <span class="relative mr-3 inline-block w-4 text-center">
@@ -227,7 +227,7 @@
         </div>
         {#if showDescription}
             <p
-                class="mt-3 text-sm whitespace-nowrap min-w-0 max-w-full overflow-hidden text-ellipsis basis-full"
+                class="mt-2 text-sm whitespace-nowrap min-w-0 max-w-full overflow-hidden text-ellipsis basis-full"
             >
                 {formatHTMLAsText(trail.description ?? "")}
             </p>

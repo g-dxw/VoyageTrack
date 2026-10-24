@@ -7,6 +7,7 @@
 
 <script lang="ts">
     import { _ } from "svelte-i18n";
+    import { translateValidationError } from "$lib/util/validation_i18n";
 
     interface Props {
         name?: string;
@@ -30,6 +31,9 @@
         onchange
     }: Props = $props();
 
+    const uid = $props.id();
+    const inputId = `select-${uid}`;
+
     function onChange(target: any) {
         onchange?.(target?.value);
     }
@@ -37,13 +41,14 @@
 
 <div>
     {#if label.length}
-        <label for={name} class="block text-sm font-medium pb-1">
+        <label for={inputId} class="block text-sm font-medium pb-1">
             {label}
         </label>
     {/if}
     <select
+        id={inputId}
         {name}
-        class="block bg-input-background h-10 px-4 border-r-8 border-transparent outline-1 outline-input-border rounded-md focus:outline-input-border-focus transition-colors"
+        class="block max-w-full bg-input-background h-11 sm:h-9 px-3 border-r-8 border-transparent outline-1 outline-input-border rounded-md focus:outline-input-border-focus transition-colors"
         class:w-full={fullWidth}
         class:outline-red-400={(error?.length ?? 0) > 0}
         class:bg-input-background-error={(error?.length ?? 0) > 0}
@@ -59,7 +64,7 @@
 
     {#if error}
         <span class="select-error text-xs text-red-400">
-            {error instanceof Array ? $_(error[0]) : error}
+            {translateValidationError(error, $_)}
         </span>
     {/if}
 </div>

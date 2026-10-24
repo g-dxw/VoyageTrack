@@ -64,7 +64,7 @@
     @media only screen and (min-width: 768px) {
         #trail-details,
         #panel {
-            height: calc(100vh - 124px);
+            height: calc(100dvh - var(--app-header-height) - 12px);
         }
     }
 </style>

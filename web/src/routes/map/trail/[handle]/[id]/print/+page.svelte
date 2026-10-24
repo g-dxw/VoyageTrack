@@ -34,10 +34,10 @@
     const settings: Settings = page.data.settings;
 
     const paperSizes: { text: string; value: keyof typeof paperDimensions }[] =
-        [
+        $derived([
             { text: "A4", value: "a4" },
-            { text: "Letter", value: "letter" },
-        ];
+            { text: $_("paper-size-letter"), value: "letter" },
+        ]);
     const paperDimensions = {
         a4: {
             css: {
@@ -60,21 +60,19 @@
             },
         },
     };
-    let selectedPaperSize = $state(paperSizes[0].value);
+    let selectedPaperSize = $state<keyof typeof paperDimensions>("a4");
 
-    const orientations: { text: string; value: "portrait" | "landscape" }[] = [
-        { text: "Portrait", value: "portrait" },
-        { text: "Landscape", value: "landscape" },
-    ];
-    let selectedOrientation: "portrait" | "landscape" = $state(
-        orientations[0].value,
-    );
+    const orientations: { text: string; value: "portrait" | "landscape" }[] = $derived([
+        { text: $_("paper-orientation-portrait"), value: "portrait" },
+        { text: $_("paper-orientation-landscape"), value: "landscape" },
+    ]);
+    let selectedOrientation: "portrait" | "landscape" = $state("portrait");
 
-    const gridOptions = [
+    const gridOptions = $derived([
         { text: $_("degrees"), value: "degree" },
         { text: $_("no-grid"), value: "off" },
-    ];
-    let selectedGrid = $state(gridOptions[0].value);
+    ]);
+    let selectedGrid = $state("degree");
 
     let scale: number = $state(1);
 
@@ -327,10 +325,31 @@
             // Scale
             currentHeight += 12;
             doc.setFillColor(255, 255, 255);
-            doc.text(
-                `Scale:  1 : ${Math.round(scale)}`,
+            // System-font rasterization keeps this localized label readable
+            // when the PDF's bundled Latin font does not contain its glyphs.
+            const scaleLabel = `${$_("map-scale")}:  1 : ${Math.round(scale)}`;
+            const scaleCanvas = document.createElement("canvas");
+            const scaleContext = scaleCanvas.getContext("2d");
+            if (!scaleContext) {
+                throw new Error("Unable to create scale label canvas");
+            }
+            const pixelsPerPoint = 4;
+            const fontSizePx = doc.getFontSize() * pixelsPerPoint;
+            const pixelsPerPDFUnit = pixelsPerPoint * doc.internal.scaleFactor;
+            scaleContext.font = `${fontSizePx}px sans-serif`;
+            scaleCanvas.width = Math.ceil(scaleContext.measureText(scaleLabel).width);
+            scaleCanvas.height = Math.ceil(fontSizePx * 1.5);
+            scaleContext.font = `${fontSizePx}px sans-serif`;
+            scaleContext.fillStyle = doc.getTextColor();
+            scaleContext.textBaseline = "alphabetic";
+            scaleContext.fillText(scaleLabel, 0, fontSizePx);
+            doc.addImage(
+                scaleCanvas,
+                "PNG",
                 8 + 24 + 4,
-                currentHeight,
+                currentHeight - fontSizePx / pixelsPerPDFUnit,
+                scaleCanvas.width / pixelsPerPDFUnit,
+                scaleCanvas.height / pixelsPerPDFUnit,
             );
 
             // Elevation profile
@@ -597,7 +616,7 @@
     <div
         class="print-details md:sticky w-80 md:top-8 mx-auto md:ml-8 p-6 flex flex-col gap-y-4 border border-input-border rounded-3xl"
     >
-        <h1 class="text-4xl font-bold">Print Trail</h1>
+        <h1 class="text-4xl font-bold">{$_("print-trail")}</h1>
         <Select
             bind:value={selectedPaperSize}
             items={paperSizes}
@@ -670,7 +689,7 @@
                 ></MapWithElevationMaplibre>
             </div>
             <div class="flex items-center min-w-0">
-                <img class="w-[100px] h-[100px]" id="qrcode" alt="QR Code" />
+                <img class="w-[100px] h-[100px]" id="qrcode" alt={$_("qr-code")} />
                 <div>
                     <div
                         class="flex mt-1 gap-x-4 gap-y-2 text-sm text-gray-500 whitespace-nowrap"
@@ -702,7 +721,7 @@
                     >
                     </svg>
                     <span class="text-sm"
-                        >Scale: &nbsp 1 : {Math.round(scale)}</span
+                        >{$_("map-scale")}: &nbsp 1 : {Math.round(scale)}</span
                     >
                 </div>
                 <div

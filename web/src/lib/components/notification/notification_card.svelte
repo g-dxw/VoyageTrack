@@ -133,7 +133,7 @@
     role="presentation"
     onclick={handleItemClick}
 >
-    <img class="rounded-full w-8 aspect-square" src={avatarSrc} alt="avatar" />
+    <img class="rounded-full w-8 aspect-square" src={avatarSrc} alt={$_("avatar")} />
     <div>
         <p
             class="text-sm {notification.seen

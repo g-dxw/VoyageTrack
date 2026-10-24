@@ -42,6 +42,7 @@
 
 <script lang="ts">
     import { onDestroy, type Snippet } from "svelte";
+    import { _ } from "svelte-i18n";
 
     interface Props {
         id: string;
@@ -98,7 +99,6 @@
     {id}
     bind:this={dialog}
     tabindex="-1"
-    aria-hidden="true"
     onclose={handleClose}
     class="{size} max-h-full rounded-xl text-content"
 >
@@ -106,7 +106,7 @@
     <div class="bg-background shadow rounded-xl">
         <!-- Modal header -->
         <div
-            class="flex items-center justify-between p-4 md:p-5 border-b border-separator rounded-t"
+            class="flex items-center justify-between gap-3 px-4 py-3 border-b border-separator rounded-t"
         >
             <h3 class="text-xl font-semibold">
                 {title}
@@ -117,17 +117,19 @@
                 onclick={closeModal}
             >
                 <i class="fa fa-close"></i>
-                <span class="sr-only">Close modal</span>
+                <span class="sr-only">{$_("close")}</span>
             </button>
         </div>
         <!-- Modal body -->
-        <div class="p-4 md:p-5 space-y-4">
+        <div class="p-4 space-y-3">
             {@render content?.()}
         </div>
         <!-- Modal footer -->
-        <div class="p-4 md:p-5 border-t border-separator rounded-b">
-            {@render footer?.({ closeModal })}
-        </div>
+        {#if footer}
+            <div class="px-4 py-3 border-t border-separator rounded-b">
+                {@render footer({ closeModal })}
+            </div>
+        {/if}
     </div>
 </dialog>
 

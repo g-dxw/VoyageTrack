@@ -44,7 +44,7 @@
             show_toast({
                 type: "error",
                 icon: "close",
-                text: "Error during search",
+                text: $_("error-during-search"),
             });
         }
     }
@@ -71,7 +71,7 @@
             class="rounded-full w-8 aspect-square mr-2"
             src={item.value.icon ||
                 `https://api.dicebear.com/7.x/initials/svg?seed=${item.value.preferred_username}&backgroundType=gradientLinear`}
-            alt="avatar"
+            alt={$_("avatar")}
         />
     {/snippet}
 </Search>

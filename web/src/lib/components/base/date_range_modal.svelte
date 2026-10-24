@@ -1,6 +1,6 @@
 <script lang="ts">
     import { dateInputValue } from "$lib/util/date_util";
-    import { _ } from "svelte-i18n";
+    import { _, locale } from "svelte-i18n";
     import Calendar from "./calendar.svelte";
     import Modal from "./modal.svelte";
 
@@ -50,7 +50,7 @@
             return "–";
         }
 
-        return new Date(value).toLocaleDateString(undefined, {
+        return new Date(value).toLocaleDateString($locale ?? undefined, {
             month: "2-digit",
             day: "2-digit",
             year: "numeric",

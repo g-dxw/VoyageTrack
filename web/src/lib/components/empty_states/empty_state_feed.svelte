@@ -10,7 +10,7 @@
     <img
         class="aspect-square h-96 mb-4"
         src={$theme === "light" ? emptyStateFeedLight : emptyStateFeedDark}
-        alt="Empty State showing a wanderer going into the distance"
+        alt={$_("empty-state-illustration")}
     />
 
     <h3 class="text-2xl font-medium text-center text-gray-500">{$_("empty-feed")}...</h3>

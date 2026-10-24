@@ -8,6 +8,8 @@
     import type { SandboxBounds } from "$lib/util/sandbox_util";
     import { sanitizeWaypointHTML } from "$lib/util/sanitize_html";
     import type { Waypoint } from "$lib/models/waypoint";
+    import { _ } from "svelte-i18n";
+    import { mapStyleLabel } from "$lib/util/map_i18n";
 
     interface Props {
         map?: M.Map | null;
@@ -1006,12 +1008,12 @@
     aria-hidden={!visible}
 >
     {#if visible && !loading}
-        <div class="sandbox-controls" aria-label="Sandbox controls">
+        <div class="sandbox-controls" aria-label={$_("sandbox-controls")}>
             <button
                 type="button"
                 class:active={stylePanelOpen}
-                aria-label="Sandbox map style"
-                title="Sandbox map style"
+                aria-label={$_("map-style")}
+                title={$_("map-style")}
                 aria-expanded={stylePanelOpen}
                 onclick={() => (stylePanelOpen = !stylePanelOpen)}
             >
@@ -1021,27 +1023,27 @@
                 <button
                     type="button"
                     class:active={waypointsVisible}
-                    aria-label={waypointsVisible ? "Hide points" : "Show points"}
-                    title={waypointsVisible ? "Hide points" : "Show points"}
+                    aria-label={$_(waypointsVisible ? "hide-waypoints" : "show-waypoints")}
+                    title={$_(waypointsVisible ? "hide-waypoints" : "show-waypoints")}
                     aria-pressed={waypointsVisible}
                     onclick={toggleWaypoints}
                 >
                     <i class="fa fa-map-marker-alt" aria-hidden="true"></i>
                 </button>
             {/if}
-            <button type="button" aria-label="Zoom in" title="Zoom in" onclick={zoomIn}>
+            <button type="button" aria-label={$_("map-zoom-in")} title={$_("map-zoom-in")} onclick={zoomIn}>
                 <i class="fa fa-plus" aria-hidden="true"></i>
             </button>
-            <button type="button" aria-label="Zoom out" title="Zoom out" onclick={zoomOut}>
+            <button type="button" aria-label={$_("map-zoom-out")} title={$_("map-zoom-out")} onclick={zoomOut}>
                 <i class="fa fa-minus" aria-hidden="true"></i>
             </button>
-            <button type="button" aria-label="Reset sandbox view" title="Reset sandbox view" onclick={resetView}>
+            <button type="button" aria-label={$_("reset-sandbox-view")} title={$_("reset-sandbox-view")} onclick={resetView}>
                 <i class="fa fa-compass" aria-hidden="true"></i>
             </button>
         </div>
         {#if stylePanelOpen}
-            <div class="sandbox-style-panel" role="radiogroup" aria-label="Sandbox map style">
-                <div class="sandbox-style-header">地图样式</div>
+            <div class="sandbox-style-panel" role="radiogroup" aria-label={$_("map-style")}>
+                <div class="sandbox-style-header">{$_("map-style")}</div>
                 {#each Object.keys(styles) as style}
                     <button
                         type="button"
@@ -1054,19 +1056,19 @@
                         }}
                     >
                         <span class="sandbox-radio" aria-hidden="true"></span>
-                        {style}
+                        {mapStyleLabel(style, $_)}
                     </button>
                 {/each}
             </div>
         {/if}
         {#if selectedWaypoint}
             <div class="sandbox-waypoint-popup" style={`left: ${popupPosition.x}px; top: ${popupPosition.y}px`}>
-                <button type="button" class="sandbox-popup-close" aria-label="Close point details" onclick={() => (selectedWaypoint = null)}>
+                <button type="button" class="sandbox-popup-close" aria-label={$_("close")} onclick={() => (selectedWaypoint = null)}>
                     <i class="fa fa-close" aria-hidden="true"></i>
                 </button>
                 <div class="sandbox-popup-title">
                     <i class="fa fa-map-marker-alt" aria-hidden="true"></i>
-                    {selectedWaypoint.name || "打卡点"}
+                    {selectedWaypoint.name || $_("waypoints", { values: { n: 1 } })}
                 </div>
                 {#if selectedWaypoint.description}
                     <div class="sandbox-popup-description">{@html sanitizeWaypointHTML(selectedWaypoint.description)}</div>
@@ -1078,7 +1080,7 @@
         {/if}
     {/if}
     {#if loading}
-        <div class="sandbox-loading" role="status" aria-label="Loading 3D sandbox">
+        <div class="sandbox-loading" role="status" aria-label={$_("loading-3d-sandbox")}>
             <i class="fa fa-spinner fa-spin" aria-hidden="true"></i>
         </div>
     {/if}

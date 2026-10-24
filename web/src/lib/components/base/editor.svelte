@@ -6,6 +6,7 @@
     import StarterKit from "@tiptap/starter-kit";
     import { mount, onDestroy, onMount, unmount, untrack } from "svelte";
     import { _ } from "svelte-i18n";
+    import { translateValidationError } from "$lib/util/validation_i18n";
     import { z, ZodError } from "zod";
     import { type DropdownItem } from "./dropdown.svelte";
     import Modal from "./modal.svelte";
@@ -125,7 +126,7 @@
                                 show_toast({
                                     type: "error",
                                     icon: "close",
-                                    text: "Error during search",
+                                    text: $_("error-during-search"),
                                 });
                                 return [];
                             }
@@ -374,7 +375,7 @@
                 class="btn-icon"
                 onclick={() => editor?.chain().focus().toggleBold().run()}
                 class:ring-2={editor?.isActive("bold")}
-                aria-label="Bold"
+                aria-label={$_("editor-bold")}
             >
                 <i class="fas fa-bold"></i>
             </button>
@@ -384,7 +385,7 @@
                 class="btn-icon"
                 onclick={() => editor?.chain().focus().toggleItalic().run()}
                 class:ring-2={editor?.isActive("italic")}
-                aria-label="Italic"
+                aria-label={$_("editor-italic")}
             >
                 <i class="fas fa-italic"></i>
             </button>
@@ -394,7 +395,7 @@
                 class="btn-icon"
                 onclick={() => editor?.chain().focus().toggleUnderline().run()}
                 class:ring-2={editor?.isActive("underline")}
-                aria-label="Underline"
+                aria-label={$_("editor-underline")}
             >
                 <i class="fas fa-underline"></i>
             </button>
@@ -406,7 +407,7 @@
                 class="btn-icon"
                 onclick={() => editor?.chain().focus().toggleBulletList().run()}
                 class:ring-2={editor?.isActive("bulletList")}
-                aria-label="Bullet List"
+                aria-label={$_("editor-bullet-list")}
             >
                 <i class="fas fa-list-ul"></i>
             </button>
@@ -417,7 +418,7 @@
                 onclick={() =>
                     editor?.chain().focus().toggleOrderedList().run()}
                 class:ring-2={editor?.isActive("orderedList")}
-                aria-label="Numbered List"
+                aria-label={$_("editor-numbered-list")}
             >
                 <i class="fas fa-list-ol"></i>
             </button>
@@ -429,7 +430,7 @@
                 class="btn-icon"
                 onclick={() => editor?.chain().focus().toggleBlockquote().run()}
                 class:ring-2={editor?.isActive("blockquote")}
-                aria-label="Quote"
+                aria-label={$_("editor-quote")}
             >
                 <i class="fas fa-quote-right"></i>
             </button>
@@ -441,7 +442,7 @@
                 class="btn-icon"
                 onclick={() => openLinkModal()}
                 class:ring-2={editor?.isActive("link")}
-                aria-label="Link"
+                aria-label={$_("link")}
             >
                 <i class="fas fa-link"></i>
             </button>
@@ -451,18 +452,18 @@
 
     {#if error}
         <span class="editor-error text-xs text-red-400">
-            {error instanceof Array ? $_(error[0]) : error}
+            {translateValidationError(error, $_)}
         </span>
     {/if}
 </div>
 <Modal
     id={modalId}
-    title={"Insert/edit link"}
+    title={$_("editor-insert-edit-link")}
     size="md:min-w-lg"
     bind:this={modal}
 >
     {#snippet content()}
-        <TextField label={"URL"} bind:value={linkURL} error={linkURLError}
+        <TextField label={$_("url")} bind:value={linkURL} error={linkURLError}
         ></TextField>
         <TextField label={$_("text")} bind:value={linkText}></TextField>
         <Toggle
@@ -477,7 +478,7 @@
                     type="button"
                     class="btn-secondary shrink-0"
                     onclick={() => unsetLink()}
-                    aria-label="Link"
+                    aria-label={$_("unlink")}
                 >
                     <i class="fas fa-link-slash"></i>
                     <span>{$_("unlink")}</span>

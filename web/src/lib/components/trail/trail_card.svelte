@@ -73,7 +73,7 @@
 </script>
 
 <div
-    class="trail-card relative rounded-2xl border border-input-border min-w-72 h-[386px] bg-background {fullWidth
+    class="trail-card relative rounded-2xl border border-input-border min-w-0 w-full sm:min-w-64 bg-background {fullWidth
         ? ''
         : 'lg:w-72'} cursor-pointer flex flex-col"
     class:bg-secondary-hover={selected}
@@ -82,7 +82,7 @@
     role="listitem"
 >
     <div
-        class="relative w-full basis-full max-h-48 overflow-hidden rounded-t-2xl"
+        class="relative w-full h-36 shrink-0 overflow-hidden rounded-t-2xl"
     >
         {#if isVideoURL(thumbnail)}
             <!-- svelte-ignore a11y_media_has_caption -->
@@ -155,14 +155,14 @@
             </div>
         </div>
     {/if}
-    <div class="p-4">
+    <div class="p-3 sm:p-4">
         <div>
             <h4 class="font-semibold text-lg line-clamp-2 wrap-anywhere">
                 {trail.name}
             </h4>
             {#if trail.date}
-                <p class="text-xs text-gray-500 mb-3">
-                    {new Date(trail.date).toLocaleDateString(undefined, {
+                <p class="text-xs text-gray-500 mb-2">
+                    {new Date(trail.date).toLocaleDateString($locale ?? undefined, {
                         month: "long",
                         day: "2-digit",
                         year: "numeric",
@@ -171,13 +171,13 @@
                 </p>
             {/if}
             {#if trail.expand?.author}
-                <p class="text-xs text-gray-500 mb-3">
+                <p class="text-xs text-gray-500 mb-2">
                     {$_("by")}
                     <img
                         class="rounded-full w-5 aspect-square mx-1 inline"
                         src={trail.expand.author.icon ||
                             `https://api.dicebear.com/7.x/initials/svg?seed=${trail.expand.author.preferred_username}&backgroundType=gradientLinear`}
-                        alt="avatar"
+                        alt={$_("avatar")}
                     />
                     {trail.expand.author.preferred_username}{trail.expand.author
                         .is_local
@@ -186,7 +186,7 @@
                 </p>
             {/if}
             {#if trail.tags.length}
-                <div class="flex flex-wrap gap-1 mb-3 items-center">
+                <div class="flex flex-wrap gap-1 mb-2 items-center">
                     {#each expandedTags ? trail.tags : trail.tags.slice(0, 2) as t}
                         <Chip text={t} closable={false} primary={false}></Chip>
                     {/each}

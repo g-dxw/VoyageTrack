@@ -41,6 +41,8 @@
     import "maplibre-gl/dist/maplibre-gl.css";
     import "$lib/util/maplibre_worker";
     import { onDestroy, onMount, untrack } from "svelte";
+    import { _ } from "svelte-i18n";
+    import { mapControlLocale } from "$lib/util/map_i18n";
 
     interface Props {
         trails?: Trail[];
@@ -175,9 +177,9 @@
             this.button.className = "maplibregl-ctrl-icon";
             this.button.innerHTML = '<i class="fa fa-cube" aria-hidden="true"></i>';
             this.button.title = enabled
-                ? "Toggle 3D sandbox"
-                : "Configure a terrain source to use 3D sandbox";
-            this.button.setAttribute("aria-label", "Toggle 3D sandbox");
+                ? $_("toggle-3d-sandbox")
+                : $_("sandbox-terrain-source-required");
+            this.button.setAttribute("aria-label", $_("toggle-3d-sandbox"));
             this.button.disabled = !enabled;
             this.button.addEventListener("click", this.onToggle);
             this.container.appendChild(this.button);
@@ -1158,6 +1160,7 @@
                 zoom: initialState.zoom,
             },
             ...mapOptions,
+            locale: { ...mapControlLocale($_), ...mapOptions?.locale },
         };
         map = new M.Map(finalMapOptions);
 
@@ -1412,7 +1415,7 @@
 <svelte:window on:keydown={handleKeydown} on:keyup={handleKeyup} />
 <div id="map-frame" class:sandbox-active={sandboxMode}>
     {#if showSandboxControl && showTerrain && page.data.settings?.terrain?.terrain}
-        <div class="map-view-tabs" role="tablist" aria-label="Map view">
+        <div class="map-view-tabs" role="tablist" aria-label={$_("map-view")}>
             <button
                 type="button"
                 class:active={mapView === "map"}
@@ -1420,7 +1423,7 @@
                 aria-selected={mapView === "map"}
                 onclick={() => selectMapView("map")}
             >
-                地图
+                {$_("map")}
             </button>
             <button
                 type="button"
@@ -1429,7 +1432,7 @@
                 aria-selected={mapView === "sandbox"}
                 onclick={() => selectMapView("sandbox")}
             >
-                沙盘
+                {$_("sandbox")}
             </button>
         </div>
     {/if}

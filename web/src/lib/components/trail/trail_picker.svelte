@@ -5,6 +5,8 @@
     import GPX from "$lib/models/gpx/gpx";
     import { fromFile } from "$lib/util/gpx_util";
     import { onMount } from "svelte";
+    import { _ } from "svelte-i18n";
+    import { mapControlLocale } from "$lib/util/map_i18n";
     interface Props {
         trailFile: File | Blob | undefined | null;
         trailData: string | undefined;
@@ -34,6 +36,7 @@
     async function initMap() {
         map = new M.Map({
             container: "trail-picker-map",
+            locale: mapControlLocale($_),
             attributionControl: false,
             dragPan: false,
             scrollZoom: false,

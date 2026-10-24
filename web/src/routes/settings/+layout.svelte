@@ -1,7 +1,7 @@
 <script lang="ts">
     import { goto } from "$app/navigation";
     import { page } from "$app/state";
-    import type { SelectItem } from "$lib/components/base/select.svelte";
+    import Select, { type SelectItem } from "$lib/components/base/select.svelte";
     import { _ } from "svelte-i18n";
     import type { Snippet } from "svelte";
     interface Props {
@@ -10,7 +10,7 @@
 
     let { children }: Props = $props();
 
-    const settingsLinks: SelectItem[] = [
+    const settingsLinks: SelectItem[] = $derived([
         { text: $_("profile"), value: "/settings/profile" },
         { text: $_("my-account"), value: "/settings/account" },
         { text: $_("privacy"), value: "/settings/privacy" },
@@ -29,38 +29,55 @@
             text: $_("help"),
             value: "https://wanderer.to/run/installation/quick",
         },
-    ];
+    ]);
 
-    let activeIndex = $derived(
-        settingsLinks.findIndex((l) => l.value === page.url.pathname),
+    const navigationItems = $derived(
+        settingsLinks.filter((item) => item.value.startsWith("/settings/")),
     );
-
-    function handleItemClick(e: Event, item: SelectItem) {
-        e.stopPropagation();
-        if (item.value != settingsLinks.at(-1)?.value) {
-            goto(item.value);
-        } else {
-            window.open(item.value, "_blank");
-        }
-    }
 </script>
 
 <div
-    class="grid grid-cols-1 md:grid-cols-[256px_1fr] max-w-6xl mx-4 md:mx-auto gap-x-12 items-start"
+    class="grid grid-cols-1 md:grid-cols-[220px_minmax(0,1fr)] max-w-6xl mx-4 md:mx-auto gap-x-6 items-start"
 >
-    <menu class="p-4 border border-input-border rounded-xl mb-4">
-        {#each settingsLinks as item, i}
-            <li
-                class="menu-item flex items-center px-4 py-3 my-1 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors rounded-md"
-                class:bg-menu-item-background-hover={i == activeIndex}
-                role="presentation"
-                onmousedown={(e) => handleItemClick(e, item)}
-            >
-                {item.text}
-            </li>
-        {/each}
-    </menu>
-    <div class="settings-content">
+    <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2 items-end mb-4 md:hidden">
+        <Select
+            name="settings-section"
+            label={$_("settings")}
+            items={navigationItems}
+            value={page.url.pathname}
+            onchange={(value: string) => goto(value)}
+            fullWidth
+        />
+        <a
+            class="btn-secondary inline-flex items-center justify-center gap-2"
+            href="https://wanderer.to/run/installation/quick"
+            target="_blank"
+            rel="noopener noreferrer"
+        >
+            <i class="fa fa-external-link text-sm" aria-hidden="true"></i>
+            {$_("help")}
+        </a>
+    </div>
+    <nav class="hidden md:block p-2 border border-input-border rounded-xl" aria-label={$_("settings")}>
+        <ul>
+            {#each settingsLinks as item}
+                {@const external = !item.value.startsWith("/settings/")}
+                <li>
+                    <a
+                        href={item.value}
+                        target={external ? "_blank" : undefined}
+                        rel={external ? "noopener noreferrer" : undefined}
+                        aria-current={item.value === page.url.pathname ? "page" : undefined}
+                        class="menu-item flex min-h-9 items-center px-3 py-2 text-sm leading-5 hover:bg-menu-item-background-hover focus-visible:bg-menu-item-background-focus focus-visible:outline-2 focus-visible:outline-input-border-focus transition-colors rounded-md"
+                        class:bg-menu-item-background-hover={item.value === page.url.pathname}
+                    >
+                        {item.text}
+                    </a>
+                </li>
+            {/each}
+        </ul>
+    </nav>
+    <div class="settings-content min-w-0">
         {@render children?.()}
     </div>
 </div>

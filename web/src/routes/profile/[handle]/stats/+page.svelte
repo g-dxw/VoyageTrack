@@ -452,7 +452,7 @@
     }
 
     function formatDateLabel(value: string) {
-        return new Date(value).toLocaleDateString(undefined, {
+        return new Date(value).toLocaleDateString($locale ?? undefined, {
             month: "2-digit",
             day: "2-digit",
             year: "numeric",
@@ -467,7 +467,7 @@
     ) {
         const date = new Date(Math.round(value) * millisecondsPerDay);
         if (unit === "day") {
-            return date.toLocaleDateString(undefined, {
+            return date.toLocaleDateString($locale ?? undefined, {
                 month: "2-digit",
                 day: "2-digit",
                 year: detailed ? "numeric" : undefined,
@@ -475,7 +475,7 @@
             });
         }
         if (unit === "month") {
-            return date.toLocaleDateString(undefined, {
+            return date.toLocaleDateString($locale ?? undefined, {
                 month: detailed ? "long" : "short",
                 year: detailed ? "numeric" : undefined,
                 timeZone: "UTC",
@@ -484,7 +484,9 @@
 
         const year = date.getUTCFullYear();
         if (unit === "quarter") {
-            return `Q${Math.floor(date.getUTCMonth() / 3) + 1} ${year}`;
+            return $_("activity-chart-quarter", {
+                values: { quarter: Math.floor(date.getUTCMonth() / 3) + 1, year },
+            });
         }
         return String(year);
     }
@@ -762,7 +764,7 @@
     function showLoadError() {
         show_toast({
             icon: "close",
-            text: "Error loading stats.",
+            text: $_("error-loading-stats"),
             type: "error",
         });
     }

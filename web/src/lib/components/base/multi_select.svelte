@@ -52,7 +52,7 @@
     {/if}
     <div
         role="presentation"
-        class="relative min-w-44 w-full flex flex-wrap items-center gap-2 border border-input-border bg-input-background min-h-[50px] p-3 rounded-md transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0 cursor-pointer pr-6"
+        class="relative min-w-0 w-full flex flex-wrap items-center gap-1.5 border border-input-border bg-input-background min-h-11 sm:min-h-9 px-3 py-2 sm:py-1.5 leading-5 rounded-md transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0 cursor-pointer pr-8"
         onclick={() => (showDropdown = !showDropdown)}
     >
         {#if value.length === 0}
@@ -80,9 +80,9 @@
             {#each items as item}
                 <button
                     onclick={() => toggleItem(item)}
-                    class="px-3 py-2 hover:bg-menu-item-background-hover cursor-pointer flex justify-between items-center w-full"
+                    class="min-h-11 sm:min-h-9 px-3 py-1.5 hover:bg-menu-item-background-hover cursor-pointer flex justify-between items-center gap-2 text-left w-full"
                 >
-                    <span>{$_(item.text)}</span>
+                    <span class="min-w-0 break-words">{$_(item.text)}</span>
                     {#if value.findIndex((i) => i.value == item.value) >= 0}
                         <div class="ml-auto">
                             <i class="fa fa-check"></i>

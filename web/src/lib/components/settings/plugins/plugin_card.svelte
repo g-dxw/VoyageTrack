@@ -1,6 +1,6 @@
 <script lang="ts">
     import Toggle from "$lib/components/base/toggle.svelte";
-    import { _ } from "svelte-i18n";
+    import { _, locale } from "svelte-i18n";
 
     interface Props {
         onclick: () => void;
@@ -31,7 +31,7 @@
     }: Props = $props();
 
     function formatLastSyncAt(value: string) {
-        return new Date(value).toLocaleString(undefined, {
+        return new Date(value).toLocaleString($locale ?? undefined, {
             dateStyle: "short",
             timeStyle: "short",
         });
@@ -47,7 +47,7 @@
             <img
                 class="h-16 w-24 shrink-0 object-contain object-left"
                 src={img}
-                alt="plugin logo"
+                alt={$_("plugin-logo")}
             />
         {:else}
             <div
