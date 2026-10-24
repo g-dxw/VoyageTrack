@@ -7,6 +7,7 @@
     import { slide } from "svelte/transition";
     import { _ } from "svelte-i18n";
     import { goto } from "$app/navigation";
+    import { uploadErrorMessageKey } from "$lib/util/upload_error_i18n";
 
     let minimized: boolean = $state(false);
 
@@ -82,25 +83,27 @@
         <div class="flex gap-x-2 items-start justify-between">
             <div>
                 <p class="font-medium">
-                    Remaining {remaining} - Processed {uploadStore
-                        .completedUploads.length}/{uploadStore.enqueuedUploads
-                        .length + uploadStore.completedUploads.length}
+                    {$_("upload-progress-summary", { values: {
+                        remaining,
+                        processed: uploadStore.completedUploads.length,
+                        total: uploadStore.enqueuedUploads.length + uploadStore.completedUploads.length,
+                    } })}
                 </p>
                 <p class="text-sm">
-                    Uploaded <span class="text-emerald-400"
+                    {$_("uploaded")} <span class="text-emerald-400"
                         >{successfulUploads}</span
                     >
-                    - Error <span class="text-red-400">{errorUploads}</span> -
-                    Duplicates
+                    - {$_("upload-errors")} <span class="text-red-400">{errorUploads}</span> -
+                    {$_("upload-duplicates")}
                     <span class="text-amber-500">{duplicateUploads}</span>
                 </p>
             </div>
             <div class="space-x-2">
-                <button title={$_('clear-all')} aria-label="Dismiss all" onclick={dismissAllCompleted}
+                <button title={$_('clear-all')} aria-label={$_("clear-all")} onclick={dismissAllCompleted}
                     ><i class="fa fa-ban"></i></button
                 >
                 <button
-                    aria-label="Minimize"
+                    aria-label={$_("minimize")}
                     onclick={(e) => {
                         e.stopPropagation();
                         minimized = true;
@@ -139,29 +142,29 @@
                         </p>
                         {#if u.status == "error" || u.status == "cancelled"}
                             <button
-                                aria-label="Re-upload"
+                                aria-label={$_("re-upload")}
                                 onclick={() => reUpload(u)}
                                 ><i class="fa fa-redo text-sm"></i></button
                             >
                         {/if}
                         {#if u.status == "enqueued"}
                             <button
-                                aria-label="Cancel upload"
+                                aria-label={$_("cancel-upload")}
                                 onclick={() => cancelUpload(u)}
                                 ><i class="fa fa-stop text-sm"></i></button
                             >
                         {/if}
                         {#if u.status == "duplicate"}
                             <button
-                                title="Force upload"
-                                aria-label="Force upload"
+                                title={$_("force-upload")}
+                                aria-label={$_("force-upload")}
                                 onclick={() => reUpload(u, true)}
                                 ><i class="fa fa-upload text-sm"></i></button
                             >
                         {/if}
                         {#if u.status != "enqueued" && u.status != "uploading"}
                             <button
-                                aria-label="Dismiss"
+                                aria-label={$_("dismiss")}
                                 onclick={() => dismissUpload(u)}
                                 ><i class="fa fa-close text-sm"></i></button
                             >
@@ -175,7 +178,7 @@
                         ></div>
                     {:else if u.error}
                         <p class="text-red-400 text-xs">
-                            {u.error}
+                            {$_(uploadErrorMessageKey(u.error))}
                         </p>
                     {:else if u.duplicate}
                         <p class="text-amber-400 text-xs">

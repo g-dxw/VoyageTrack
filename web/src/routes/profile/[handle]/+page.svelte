@@ -73,7 +73,7 @@
             {$_("about")}
             {data.profile.username}
             {#if data.isOwnProfile && data.profile.bio.length}
-                <a aria-label="Edit bio" class="ml-4" href="/settings/profile"
+                <a aria-label={$_("edit-bio")} class="ml-4" href="/settings/profile"
                     ><i class="fa fa-pen text-base"></i></a
                 >
             {/if}
@@ -120,7 +120,7 @@
                             : $theme === "light"
                               ? emptyStateTrailLight
                               : emptyStateTrailDark}
-                        alt="avatar"
+                        alt={$_("avatar")}
                     />
 
                     <div
@@ -136,7 +136,7 @@
         </div>
     </div>
     <div class="space-y-4">
-        <h4 class="text-xl font-semibold">Timeline</h4>
+        <h4 class="text-xl font-semibold">{$_("timeline")}</h4>
         {#if !feed.items?.length && data.isOwnProfile}
             <a class="btn-primary inline-block" href="/trail/edit/new"
                 >+ {$_("new-trail")}</a

@@ -7,7 +7,7 @@
     import { follows_create, follows_delete } from "$lib/stores/follow_store";
     import { theme } from "$lib/stores/theme_store.js";
     import { currentUser } from "$lib/stores/user_store";
-    import { _ } from "svelte-i18n";
+    import { _, locale } from "svelte-i18n";
     import errorDark from "$lib/assets/svgs/empty_states/error_dark.svg";
     import errorLight from "$lib/assets/svgs/empty_states/error_light.svg";
     import MetaTags from "$lib/components/base/meta_tags.svelte";
@@ -86,7 +86,7 @@
                     class="rounded-full w-16 aspect-square overflow-hidden shrink-0"
                     src={data.profile.icon ||
                         `https://api.dicebear.com/7.x/initials/svg?seed=${data.profile.preferredUsername}&backgroundType=gradientLinear`}
-                    alt="avatar"
+                    alt={$_("avatar")}
                 />
                 <div>
                     <h4 class="text-2xl font-semibold col-start-2">
@@ -102,7 +102,7 @@
             <p class="text-sm">
                 <span class="text-gray-500">{$_("joined")}:</span>
                 {new Date(data.profile.createdAt ?? "").toLocaleDateString(
-                    undefined,
+                    $locale ?? undefined,
                     {
                         month: "2-digit",
                         day: "2-digit",
@@ -114,8 +114,8 @@
         </div>
         {#if data.profile.error}
             <p class="px-6 py-4 text-xs bg-red-200">
-                <span class="font-semibold">{data.profile.acct}</span> could not
-                be fetched from the remote server. Showing cached data.
+                <span class="font-semibold">{data.profile.acct}</span>
+                {$_("profile-cached-data")}
             </p>
         {/if}
         <hr class="mb-4 border-input-border" />

@@ -33,7 +33,7 @@ export class ListsPage {
     // Only match the main avatar image (first img with aspect-square class in each list item)
     this.listItemsImage = page.locator('.list-list-item img.aspect-square');
 
-    this.dropdownButton = page.getByLabel('Open dropdown');
+    this.dropdownButton = page.getByRole('button', { name: 'Open menu', exact: true });
 
     this.confirmModal = page.locator("dialog[open]").filter({
       has: page.locator('button[name="delete"]')
@@ -56,7 +56,7 @@ export class ListsPage {
     expect(searchResponse.status(), 'Overview search must succeed').toBe(200);
     await expect(this.listItems.first().or(
       this.page.locator('#list-container').getByRole('img', {
-        name: 'Empty State showing a wanderer going into the distance', exact: true,
+        name: 'Empty state illustration showing a wanderer going into the distance', exact: true,
       }),
     )).toBeVisible();
     return searchResponse.request().postDataJSON();

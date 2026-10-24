@@ -1,7 +1,8 @@
 import { browser } from '$app/environment';
 import { getPb } from '$lib/pocketbase';
 import { init, register } from 'svelte-i18n';
-import { defaultLocale, LOCALE_LOADERS, normalizeLocale } from './locales';
+import { defaultLocale, LOCALE_LOADERS } from './locales';
+import { readLocaleCookie, resolveLocalePreference } from './preference';
 
 for (const [localeKey, loader] of Object.entries(LOCALE_LOADERS)) {
     register(localeKey, loader)
@@ -10,7 +11,8 @@ for (const [localeKey, loader] of Object.entries(LOCALE_LOADERS)) {
 const userLang = browser ? getPb().authStore.record?.language : null;
 const navigatorLang = browser ? window.navigator.language : null;
 
-const initial = normalizeLocale(userLang ?? navigatorLang ?? defaultLocale);
+const preferred = browser ? readLocaleCookie(document.cookie) : undefined;
+const initial = resolveLocalePreference(preferred, userLang, navigatorLang);
 
 init({
     fallbackLocale: defaultLocale,

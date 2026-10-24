@@ -803,7 +803,7 @@
 <p class="mt-2 text-sm text-gray-500">
     {$_("category-preferences-description")}
 </p>
-<hr class="mt-4 mb-6 border-input-border" />
+<hr class="mt-3 mb-4 border-input-border" />
 
 <ol bind:this={listElement} class="category-list flex flex-col gap-3 py-2">
     {#each orderedCategories as category, index}

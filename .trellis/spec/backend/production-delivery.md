@@ -14,6 +14,7 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 - Manual rollback entrypoint: `/usr/local/sbin/voyagetrack-rollback <previous-release-sha>`.
 - Runtime state: `/srv/apps/voyagetrack/{compose.yml,.env,.release,data,backups}`.
 - Required secret configuration: `ORIGIN`, `MEILI_MASTER_KEY`, `POCKETBASE_ENCRYPTION_KEY`, and `POCKETBASE_PROXY_SECRET`.
+- Canonical public origin: `https://track.cqaiclub.online` on `49.234.192.148`; dedicated Nginx site and certificate named `track.cqaiclub.online`.
 
 ## 3. Contracts
 
@@ -30,6 +31,7 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 - Automatic rollback restores the prior image and its pre-deploy database archive. It must not restore data while candidate writers may still be running.
 - Manual rollback is limited to the immediately previous release with an exact metadata mapping. If the older release fails health checks, restore both the current release and its database snapshot.
 - Only Nginx exposes the web service at `127.0.0.1:13000`; PocketBase diagnostics remain at `127.0.0.1:18090`; Meilisearch has no host port. Public success requires live-origin verification, not only container health.
+- A hostname switch preserves all runtime secrets/data, backs up the root-only `.env`, and updates only `ORIGIN` for both services. Install only that hostname's HTTP challenge site, issue its separate certificate through existing Certbot, then validate/install/reload its TLS site. Keep unrelated virtual hosts intact and verify the renewal timer plus Nginx reload hook. Never enable TLS before its certificate exists.
 
 ## 4. Validation and error matrix
 
@@ -49,6 +51,7 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 | Manual rollback lacks exact backup metadata | Refuse to run the older image against newer data |
 | Nginx configuration or certificate is invalid | Do not reload or enable the TLS site |
 | Host-local health passes but public origin fails | Report production as not publicly online and identify DNS/TLS/proxy as the remaining gate |
+| ACME secondary validation times out despite successful challenge requests in other regions | Verify DNS, Nginx challenge path and host firewall read-only; retry boundedly after confirming reachability, without broadly weakening firewall policy |
 
 ## 5. Good, base, and bad cases
 

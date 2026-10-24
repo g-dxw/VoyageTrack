@@ -28,3 +28,30 @@ Merged open-wanderer/wanderer dev at 298d3369 while preserving VoyageTrack impor
 ### Status
 
 [OK] **Completed**
+
+
+## Session 2: Protected VoyageTrack production delivery
+<!-- trellis-session: v=2 fp=9b1884d6593b661c -->
+
+**Date**: 2026-10-20
+**Task**: Protected VoyageTrack production delivery
+**Branch**: `dev`
+
+### Summary
+
+Merged upstream delivery work, enforced dev-only main PRs, added GitHub-built immutable production images with guarded deployment and rollback, deployed main 3935b6c9 to cqaiclubOnline, and verified all three services healthy; public hostname remains blocked by an unavailable Cloudflare Tunnel.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `a630b264` | ci: add protected production deployment pipeline |
+| `89c352a4` | fix(ci): track deployment test runner |
+| `3ad2524e` | fix(deploy): mirror search image through GHCR |
+| `7a25fbb9` | fix(deploy): stream prebuilt images to production |
+| `8cb89198` | fix(deploy): pull artifacts through mainland mirrors |
+| `4fe1bdf1` | fix(deploy): keep image pulls connected |
+
+### Status
+
+[OK] **Completed**

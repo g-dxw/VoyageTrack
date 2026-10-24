@@ -49,7 +49,7 @@
     {type}
     {id}
 >
-    <div class:invisible={loading}>
+    <div class="min-w-0 max-w-full break-words" class:invisible={loading}>
         {#if icon}
             <i class="fa fa-{icon} mr-2"></i>
         {/if}

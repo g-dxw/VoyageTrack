@@ -150,7 +150,7 @@
         </label>
     {/if}
     <div
-        class="flex items-center gap-1 flex-wrap bg-input-background border border-input-border rounded-md p-3 transition-colors focus-within:border-input-border-focus focus-within:ring-0 w-full {extraClasses}"
+        class="flex min-h-11 sm:min-h-9 items-center gap-1 flex-wrap bg-input-background border border-input-border rounded-md px-3 py-2 sm:py-1.5 transition-colors focus-within:border-input-border-focus focus-within:ring-0 w-full {extraClasses}"
     >
         {#if multiple}
             {#each value as ComboboxItem[] as v, i}
@@ -174,7 +174,7 @@
             {/each}
         {/if}
         <input
-            class="flex-1 min-w-24 bg-input-background focus:outline-none"
+            class="flex-1 min-w-24 leading-5 bg-input-background focus:outline-none"
             type="search"
             {name}
             oninput={onSearchType}
@@ -198,15 +198,15 @@
                 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
                 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
                 <li
-                    class="menu-item flex items-center px-4 py-3 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
+                    class="menu-item flex min-h-11 sm:min-h-9 items-center px-3 py-1.5 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
                     tabindex="0"
                     onmousedown={(e) => handleItemClick(e, item)}
                     onkeydown={(e) => handleItemClick(e, item)}
                 >
                     {#if item.icon}
-                        <i class="fa fa-{item.icon} mr-6"></i>
+                        <i class="fa fa-{item.icon} mr-3 shrink-0"></i>
                     {/if}
-                    <p class="text-ellipsis">
+                    <p class="min-w-0 break-words">
                         {#each textMatchSegments(item.text, relevantValue) as segment}
                             {#if segment.matched}<strong>{segment.text}</strong>{:else}{segment.text}{/if}
                         {/each}

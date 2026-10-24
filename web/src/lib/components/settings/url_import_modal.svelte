@@ -81,7 +81,7 @@
         <form id="url-import-form" use:form>
             <TextField
                 name="url"
-                label="URL"
+                label={$_("url")}
                 placeholder="https://..."
                 error={$errors.url}
             ></TextField>

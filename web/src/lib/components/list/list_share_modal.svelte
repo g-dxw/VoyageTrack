@@ -143,7 +143,7 @@
                                 class="rounded-full w-8 aspect-square mr-2"
                                 src={share.expand.actor.icon ||
                                     `https://api.dicebear.com/7.x/initials/svg?seed=${share.expand.actor.preferred_username}&backgroundType=gradientLinear`}
-                                alt="avatar"
+                                alt={$_("avatar")}
                             />
                             <p>
                                 {`@${share.expand.actor.preferred_username}${share.expand.actor.is_local ? "" : "@" + share.expand.actor.domain}`}
@@ -167,7 +167,7 @@
                             </div>
 
                             <button
-                                aria-label="Delete share"
+                                aria-label={$_("delete-share")}
                                 class="btn-icon text-red-500"
                                 onclick={() => deleteShare(share)}
                                 ><i class="fa fa-trash"></i></button

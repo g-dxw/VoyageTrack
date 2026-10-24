@@ -140,7 +140,7 @@
                                 style="top: {4 * i}px; right: {4 *
                                     i}px; transform: rotate(-{i * 5}deg)"
                                 src={img}
-                                alt="waypoint"
+                                alt={$_("summit-log-photo")}
                             />
                         {/if}
                     {/each}
@@ -149,7 +149,7 @@
         </td>
     {/if}
     <td class:py-4={!log.expand?.gpx_data}
-        >{new Date(log.date).toLocaleDateString(undefined, {
+        >{new Date(log.date).toLocaleDateString($locale ?? undefined, {
             month: "2-digit",
             day: "2-digit",
             year: "numeric",
@@ -208,7 +208,7 @@
     {#if showTrail}
         <td>
             <a
-                aria-label="Go to trail"
+                aria-label={$_("go-to-trail")}
                 class="btn-icon aspect-square"
                 href="/trail/view/{handle}/{log.expand?.trail?.id ?? ''}"
                 ><i class="fa fa-arrow-up-right-from-square px-[3px]"></i></a
@@ -247,7 +247,7 @@
                         class="rounded-full w-7 aspect-square"
                         src={log.expand.author.icon ||
                             `https://api.dicebear.com/7.x/initials/svg?seed=${log.expand.author.preferred_username}&backgroundType=gradientLinear`}
-                        alt="avatar"
+                        alt={$_("avatar")}
                     />
                 </a>
             </p>
@@ -257,7 +257,7 @@
         <td>
             {#if log.gpx}
                 <button
-                    aria-label="Open route"
+                    aria-label={$_("open-route")}
                     onclick={openRoute}
                     class="btn-icon"
                 >
@@ -272,7 +272,7 @@
             <Dropdown onchange={handleDropdownClick} items={dropdownItems}>
                 {#snippet children({ toggleMenu: openDropdown })}
                     <button
-                        aria-label="Open dropdown"
+                        aria-label={$_("toggle-menu")}
                         class="rounded-full bg-white text-black hover:bg-gray-200 focus:ring-4 ring-gray-100/50 transition-colors h-6 w-6"
                         onclick={openDropdown}
                     >

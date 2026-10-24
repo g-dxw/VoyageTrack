@@ -16,11 +16,14 @@
         accept = "*",
         files = $bindable(null)
     }: Props = $props();
+
+    const uid = $props.id();
+    const inputId = `file-input-${uid}`;
 </script>
 
 <div>
     {#if label.length}
-        <label for={name} class="text-sm font-medium pb-1">
+        <label for={inputId} class="text-sm font-medium pb-1">
             {label}
         </label>
     {/if}
@@ -28,7 +31,8 @@
         {name}
         {accept}
         bind:files
-        class="cursor-pointer bg-input-background border border-input-border rounded-md p-3 transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0 w-full file:rounded-lg file:px-4 file:py-2 file:border file:border-input-border-focus file:font-medium file:mr-4"
+        id={inputId}
+        class="cursor-pointer bg-input-background border border-input-border rounded-md min-h-11 sm:min-h-9 p-1 leading-5 transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0 w-full file:rounded-md file:px-3 file:py-1 sm:file:py-0.5 file:border file:border-input-border-focus file:font-medium file:mr-3"
         type="file"
         onchange={bubble('change')}
     />

@@ -2,7 +2,7 @@
     import emptyStateTrailDark from "$lib/assets/svgs/empty_states/empty_state_trail_dark.svg";
     import emptyStateTrailLight from "$lib/assets/svgs/empty_states/empty_state_trail_light.svg";
     import type { SummitLog } from "$lib/models/summit_log";
-    import { _ } from "svelte-i18n";
+    import { _, locale } from "svelte-i18n";
     import Dropdown, { type DropdownItem } from "../base/dropdown.svelte";
 
     import { theme } from "$lib/stores/theme_store";
@@ -85,7 +85,7 @@
                 class:mb-2={log.text}
             >
                 <h5 class="font-medium mr-2">
-                    {new Date(log.date).toLocaleDateString(undefined, {
+                    {new Date(log.date).toLocaleDateString($locale ?? undefined, {
                         month: "2-digit",
                         day: "2-digit",
                         year: "numeric",
@@ -104,7 +104,7 @@
                         class="rounded-full w-5 aspect-square mx-1 inline"
                         src={log.expand.author.icon ||
                             `https://api.dicebear.com/7.x/initials/svg?seed=${log.expand.author.preferred_username}&backgroundType=gradientLinear`}
-                        alt="avatar"
+                        alt={$_("avatar")}
                     />
                     {handleFromRecordWithIRI(log)}
                 </p>

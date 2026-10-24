@@ -158,9 +158,15 @@
 
     function routeCalculationErrorText(error: unknown) {
         if (error instanceof Error && error.message) {
+            if (error.message === "VALHALLA_URL not set") {
+                return $_("route-service-not-configured");
+            }
+            if (error.message === "Valhalla request failed") {
+                return $_("route-service-unavailable");
+            }
             return error.message;
         }
-        return "Error calculating route";
+        return $_("error-calculating-route");
     }
     let overwriteGPX = false;
     let draggingMarker = false;
@@ -891,7 +897,7 @@
             show_toast({
                 type: "error",
                 icon: "close",
-                text: "Error adding trail to list.",
+                text: $_("error-adding-trail-to-list"),
             });
         }
     }
@@ -2154,7 +2160,7 @@
 <main class="grid grid-cols-1 md:grid-cols-[400px_1fr]">
     <form
         id="trail-form"
-        class="overflow-y-auto overflow-x-hidden flex flex-col gap-4 px-8 order-1 md:order-0 mt-8 md:mt-0"
+        class="overflow-y-auto overflow-x-hidden flex flex-col gap-3 px-4 md:px-5 order-1 md:order-0 mt-4 md:mt-0"
         use:form
     >
         <Search
@@ -2170,7 +2176,7 @@
                 <div class="flex items-start gap-3">
                     <button
                         type="button"
-                        class="flex h-9 w-9 shrink-0 items-center justify-center self-start rounded-full p-0 text-xl text-content hover:bg-secondary-hover"
+                        class="flex h-11 w-11 sm:h-9 sm:w-9 shrink-0 items-center justify-center self-start rounded-full p-0 text-xl text-content hover:bg-secondary-hover"
                         aria-label={$_("add-as-endpoint")}
                         title={$_("add-as-endpoint")}
                         onclick={addSelectedLocationAsEndpoint}
@@ -2236,7 +2242,7 @@
             ></TrailAnchorList>
         {/if}
         {#if !drawingActive && (isNewTrail || replacingRoute)}
-        <div class="flex gap-4 items-center w-full">
+        <div class="flex gap-3 items-center w-full">
             <hr class="basis-full border-input-border" />
             <span class="text-gray-500 uppercase">{$_("or")}</span>
             <hr class="basis-full border-input-border" />
@@ -2262,7 +2268,7 @@
         <div class="flex gap-x-2">
             <h3 class="text-xl font-semibold">{$_("basic-info")}</h3>
             <button
-                aria-label="Edit basic info"
+                aria-label={$_("edit-basic-info")}
                 type="button"
                 class="btn-icon"
                 style="font-size: 0.9rem"
@@ -2273,7 +2279,7 @@
         </div>
 
         <fieldset
-            class="grid grid-cols-2 gap-4 justify-around"
+            class="grid grid-cols-2 gap-3 justify-around"
             data-felte-keep-on-remove
         >
             {#if editingBasicInfo}
@@ -2365,7 +2371,7 @@
             multiple
             chips
         ></Combobox>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Select
                 name="difficulty"
                 label={$_("difficulty")}
@@ -2422,18 +2428,20 @@
                 </li>
             {/each}
         </ul>
-        <button
-            class="btn-secondary"
-            type="button"
-            onclick={() => beforeWaypointModalOpen()}
-            ><i class="fa fa-plus mr-2"></i>{$_("add-waypoint")}</button
-        >
-        <button
-            class="btn-secondary"
-            type="button"
-            onclick={() => openPhotoBrowser()}
-            ><i class="fa fa-image mr-2"></i>{$_("from-photos")}</button
-        >
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-2">
+            <button
+                class="btn-secondary"
+                type="button"
+                onclick={() => beforeWaypointModalOpen()}
+                ><i class="fa fa-plus mr-2"></i>{$_("add-waypoint")}</button
+            >
+            <button
+                class="btn-secondary"
+                type="button"
+                onclick={() => openPhotoBrowser()}
+                ><i class="fa fa-image mr-2"></i>{$_("from-photos")}</button
+            >
+        </div>
         <input
             type="file"
             id="waypoint-photo-input"
@@ -2478,7 +2486,7 @@
             <h3 class="text-xl font-semibold">
                 {$_("list", { values: { n: 2 } })}
             </h3>
-            <div class="flex gap-4 flex-wrap">
+            <div class="flex gap-3 flex-wrap">
                 {#each lists.items as list}
                     {#if $formData.id && list.trails?.includes($formData.id)}
                         <div
@@ -2491,7 +2499,7 @@
                                     : $theme === "light"
                                       ? emptyStateTrailLight
                                       : emptyStateTrailDark}
-                                alt="avatar"
+                                alt={$_("avatar")}
                             />
 
                             <span class="text-sm">{list.name}</span>
@@ -2509,11 +2517,10 @@
             >
         {/if}
         <div
-            class="sticky bottom-0 z-20 -mx-8 mt-2 border-t border-separator bg-background px-8 pb-3 pt-3"
+            class="sticky bottom-0 z-20 -mx-4 md:-mx-5 mt-2 border-t border-separator bg-background px-4 md:px-5 py-2"
         >
             <Button
                 primary={true}
-                large={true}
                 type="submit"
                 extraClasses="w-full"
                 {loading}>{$_("save-trail")}</Button
@@ -2608,7 +2615,7 @@
     @media only screen and (min-width: 768px) {
         #trail-map,
         form {
-            height: calc(100vh - 124px);
+            height: calc(100dvh - var(--app-header-height) - 12px);
         }
     }
 

@@ -7,12 +7,13 @@
         type SelectItem,
     } from "$lib/components/base/select.svelte";
     import type { Language } from "$lib/models/settings";
+    import { localePreferenceCookie } from "$lib/i18n/preference";
     import { settings_update } from "$lib/stores/settings_store";
     import { _ } from "svelte-i18n";
 
     const settings = page.data.settings;
 
-    const languages: SelectItem[] = [
+    const languages: SelectItem[] = $derived([
         { text: $_("czech"), value: "cs" },
         { text: $_("english"), value: "en" },
         { text: $_("german"), value: "de" },
@@ -27,12 +28,12 @@
         { text: $_("portuguese"), value: "pt" },
         { text: $_("russian"), value: "ru" },
         { text: $_("chinese"), value: "zh" },
-    ];
+    ]);
 
-    const units: RadioItem[] = [
+    const units: RadioItem[] = $derived([
         { text: $_("metric"), value: "metric" },
         { text: $_("imperial"), value: "imperial" },
-    ];
+    ]);
 
     let selectedLanguage = $state(settings?.language ?? "en");
 
@@ -41,6 +42,7 @@
             id: settings!.id,
             language: value,
         });
+        document.cookie = localePreferenceCookie(value, window.location.protocol === "https:");
         window.location.reload();
     }
 
@@ -56,7 +58,7 @@
     <title>{$_("settings")} | wanderer</title>
 </svelte:head>
 <h2 class="text-2xl font-semibold">{$_("language")} & {$_("units")}</h2>
-<hr class="mt-4 mb-6 border-input-border" />
+<hr class="mt-3 mb-4 border-input-border" />
 <h4 class="text-xl font-medium mb-2">{$_("language")}</h4>
 <Select
     items={languages}

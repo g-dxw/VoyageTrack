@@ -79,7 +79,7 @@
                 class="rounded-full w-10 aspect-square overflow-hidden shrink-0"
                 src={author?.icon ||
                     `https://api.dicebear.com/7.x/initials/svg?seed=${author?.preferred_username}&backgroundType=gradientLinear`}
-                alt="avatar"
+                alt={$_("avatar")}
             />
             <div>
                 <span class="font-semibold">{author?.preferred_username}</span>
@@ -232,7 +232,7 @@
                     <button
                         class="btn-icon"
                         onclick={openDropdown}
-                        aria-label="Trail actions"
+                        aria-label={$_("trail-actions")}
                         type="button"
                         ><i class="fa fa-ellipsis-vertical"></i></button
                     >

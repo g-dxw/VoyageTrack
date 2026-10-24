@@ -203,14 +203,14 @@
 	</div>
 	<button
 		type="button"
-		aria-label="Previous month"
+		aria-label={$_("previous-month")}
 		class="btn-icon mr-2 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
 		disabled={!canGoToPreviousMonth}
 		onclick={monthMinus}><i class="fa fa-caret-left" aria-hidden="true"></i></button
 	>
 	<button
 		type="button"
-		aria-label="Next month"
+		aria-label={$_("next-month")}
 		class="btn-icon disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
 		disabled={!canGoToNextMonth}
 		onclick={monthPlus}><i class="fa fa-caret-right" aria-hidden="true"></i></button

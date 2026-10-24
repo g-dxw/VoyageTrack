@@ -1,5 +1,7 @@
 import * as M from "maplibre-gl";
 import { type ControlPosition, type IControl } from "maplibre-gl";
+import { _ } from "svelte-i18n";
+import { get } from "svelte/store";
 
 export class FullscreenControl implements IControl {
     private buttonContainer?: HTMLDivElement;
@@ -22,6 +24,8 @@ export class FullscreenControl implements IControl {
             "maplibregl-ctrl-group"
         );
         this.fullscreenButton = document.createElement("button");
+        this.fullscreenButton.title = get(_)("map-enter-fullscreen");
+        this.fullscreenButton.setAttribute("aria-label", this.fullscreenButton.title);
         this.buttonContainer.appendChild(this.fullscreenButton);
         this.iconSpan = document.createElement("i");
         this.iconSpan.classList.add("fa", "fa-maximize", "text-black");

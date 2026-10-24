@@ -9,7 +9,7 @@ import { sequence } from '@sveltejs/kit/hooks'
 import { Meilisearch } from 'meilisearch'
 import { locale } from 'svelte-i18n'
 import type { Actor } from '$lib/models/activitypub/actor'
-import { normalizeLocale } from '$lib/i18n/locales'
+import { LOCALE_COOKIE_NAME, resolveLocalePreference } from '$lib/i18n/preference'
 import { handleError } from '$lib/util/api_util'
 import { apiErrorsAsJson, isApiRequest } from '$lib/server/api_errors'
 
@@ -169,15 +169,14 @@ const auth: Handle = async ({ event, resolve }) => {
   }
   event.locals.settings = settings
 
-  const langHeader = event.request.headers.get('accept-language')?.split(',')[0]
-  const lang = settings?.language ?? langHeader
-
-  if (lang) {
-    const normalizedLocale = normalizeLocale(lang)
-    locale.set(normalizedLocale)
-    if (pb.authStore.record) {
-      pb.authStore.record!.language = normalizedLocale;
-    }
+  const normalizedLocale = resolveLocalePreference(
+    event.cookies.get(LOCALE_COOKIE_NAME),
+    settings?.language,
+    event.request.headers.get('accept-language'),
+  )
+  await locale.set(normalizedLocale)
+  if (pb.authStore.record) {
+    pb.authStore.record.language = normalizedLocale;
   }
 
   const response = await resolve(event)

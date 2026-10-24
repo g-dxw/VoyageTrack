@@ -1,5 +1,6 @@
 <script lang="ts">
     import type { MouseEventHandler } from "svelte/elements";
+    import { _ } from "svelte-i18n";
 
     interface Props {
         text: string;
@@ -20,7 +21,7 @@
     {#if closable}
         <button
             type="button"
-            aria-label="Close"
+            aria-label={$_("close")}
             {onclick}
             class="text-white hover:bg-primary-hover rounded-full w-4 h-4 flex items-center justify-center"
         >

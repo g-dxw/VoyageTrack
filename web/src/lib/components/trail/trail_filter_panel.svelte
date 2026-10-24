@@ -164,7 +164,7 @@
     }
 </script>
 
-<div class="trail-filter p-8 border border-input-border rounded-xl">
+<div class="trail-filter p-4 md:p-5 border border-input-border rounded-xl">
     {#if showTrailSearch}
         <div class="flex gap-2 items-center">
             <div class="basis-full">
@@ -175,7 +175,7 @@
                 ></Search>
             </div>
             <button
-                aria-label="Toggle filter"
+                aria-label={$_("toggle-filter")}
                 class="btn-icon md:hidden"
                 onclick={() => (filterExpanded = !filterExpanded)}
                 ><i class="fa fa-sliders"></i></button
@@ -267,7 +267,7 @@
             ></MultiSelect>
             <hr class="my-4 border-separator" />
             {#if showCitySearch}
-                <div class="mb-8">
+                <div class="mb-5">
                     <Search
                         items={searchDropdownItems}
                         label={$_("near")}

@@ -234,7 +234,7 @@ for (const dev of [true, false]) {
                 window.scrollTo({ top: 350, behavior: 'instant' });
             });
             await page.getByTestId('editor-open-parent').evaluate(button => (button as HTMLButtonElement).click());
-            await page.getByTestId('editor-beta').locator('button[aria-label="Link"]').first().click();
+            await page.getByTestId('editor-beta').getByRole('button', { name: 'link', exact: true }).first().click();
             await expect(page.locator('dialog[open]')).toHaveCount(2);
             expect(await page.evaluate(() => document.body.style.position)).toBe('fixed');
             await page.evaluate(() => (window as any).unmountModalFixture());

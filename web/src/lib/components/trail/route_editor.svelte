@@ -136,19 +136,19 @@
         <button
             class="btn-icon"
             class:bg-secondary-hover={editRoute}
-            aria-label="edit route"
+            aria-label={$_("edit-route")}
             onclick={async () => await togglePanels(!editRoute, false, false)}><i class="fa fa-route text-sm"></i></button
         >
         <button
             class="btn-icon"
             class:bg-secondary-hover={crop}
-            aria-label="crop route"
+            aria-label={$_("crop")}
             onclick={async () => await togglePanels(false, !crop, false)}><i class="fa fa-scissors text-sm"></i></button
         >
         <button
             class="btn-icon"
             class:bg-secondary-hover={recalculateElevationData}
-            aria-label="recalculate elevation data"
+            aria-label={$_("recalculate-elevation-data")}
             onclick={async () => await togglePanels(false, false, !recalculateElevationData)}><i class="fa fa-mountain text-sm"></i></button
         >
         <button
@@ -171,14 +171,14 @@
             class="btn-icon"
             class:text-gray-500={valhallaStore.undoStack.length == 0}
             disabled={valhallaStore.undoStack.length == 0}
-            aria-label="undo route action"
+            aria-label={$_("undo")}
             onclick={onUndo}><i class="fa fa-undo text-sm"></i></button
         >
         <button
             class="btn-icon"
             class:text-gray-500={valhallaStore.redoStack.length == 0}
             disabled={valhallaStore.redoStack.length == 0}
-            aria-label="redo route action"
+            aria-label={$_("redo")}
             onclick={onRedo}><i class="fa fa-redo text-sm"></i></button
         >
     </div>
@@ -200,7 +200,7 @@
                     class="btn-icon tooltip"
                     type="button"
                     onclick={() => onReverse()}
-                    aria-label="Reverse trail direction"
+                    aria-label={$_("reverse-direction")}
                     data-title={$_("reverse-direction")}
                     ><i class="fa fa-arrow-right-arrow-left"></i></button
                 >
@@ -210,7 +210,7 @@
                     disabled={!options.autoRouting}
                     onclick={() => (showSettings = !showSettings)}
                     data-title={$_("more-route-settings")}
-                    aria-label="Toggle routing settings"
+                    aria-label={$_("more-route-settings")}
                     ><i
                         class="fa fa-cogs"
                         class:text-gray-500={!options.autoRouting}

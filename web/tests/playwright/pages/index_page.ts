@@ -6,11 +6,13 @@ export class IndexPage {
 
   constructor(page: Page) {
     this.page = page;
-    this.error = page.getByText("Internal Error");
+    // Error copy is translated; the rendered HTTP status is language-independent.
+    this.error = page.getByRole('heading', { level: 1, name: /^[45]\d{2}$/ });
   }
 
   async goto() {
-    await this.page.goto('/', { waitUntil: 'networkidle' });
+    const response = await this.page.goto('/', { waitUntil: 'networkidle' });
+    expect(response?.status(), 'Homepage document must load successfully').toBe(200);
   }
 
   async search() {
@@ -30,5 +32,6 @@ export class IndexPage {
 
   async hasNoError() {
     await expect(this.error).toHaveCount(0);
+    await expect(this.page.getByRole('searchbox').first()).toBeVisible();
   }
 }

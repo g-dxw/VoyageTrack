@@ -6,6 +6,7 @@
     import { pushState } from "$app/navigation";
     import { page } from "$app/state";
     import { onMount, onDestroy } from "svelte";
+    import { _ } from "svelte-i18n";
 
     interface Props {
         photos: string[];
@@ -15,10 +16,21 @@
     let { photos }: Props = $props();
 
     export function openGallery(idx: number = 0) {
+        Object.assign(lightbox.options, galleryLabels());
         lightbox.loadAndOpen(idx, lightboxDataSource);
     }
     let lightbox: PhotoSwipeLightbox;
     let lightboxDataSource: DataSource;
+
+    function galleryLabels() {
+        return {
+            closeTitle: $_("close"),
+            zoomTitle: $_("gallery-toggle-zoom"),
+            arrowPrevTitle: $_("previous-photo"),
+            arrowNextTitle: $_("next-photo"),
+            errorMsg: $_("error-loading-photo"),
+        };
+    }
 
     // An open lightbox is a shallow history entry, so Back closes it and
     // Forward reopens it. The id keeps several galleries on a page apart.
@@ -53,6 +65,7 @@
             };
         });
         lightbox = new PhotoSwipeLightbox({
+            ...galleryLabels(),
             dataSource: lightboxDataSource,
             pswpModule: async () => await import("photoswipe"),
         });

@@ -21,7 +21,7 @@
         users_update_email,
     } from "$lib/stores/user_store";
     import { onMount } from "svelte";
-    import { _ } from "svelte-i18n";
+    import { _, locale } from "svelte-i18n";
 
     let { data } = $props();
 
@@ -63,7 +63,7 @@
             });
         } catch (e) {
             show_toast({
-                text: "Error updating email",
+                text: $_("error-updating-email"),
                 icon: "close",
                 type: "error",
             });
@@ -128,18 +128,22 @@
 </svelte:head>
 {#if $currentUser}
     <h2 class="text-2xl font-semibold">{$_("my-account")}</h2>
-    <hr class="mt-4 mb-6 border-input-border" />
+    <hr class="mt-3 mb-4 border-input-border" />
     <div class="space-y-6">
-        <h4 class="text-xl font-medium">{$_("login-details")}</h4>
-        <button
-            class="btn-secondary block"
-            onclick={() => emailModal.openModal()}>{$_("change-email")}</button
-        >
-        <button class="btn-secondary" onclick={() => passwordModal.openModal()}
-            >{$_("change-password")}</button
-        >
         <div>
-            <div class="flex justify-between items-center">
+            <h4 class="text-xl font-medium mb-3">{$_("login-details")}</h4>
+            <div class="flex flex-wrap gap-2">
+                <button
+                    class="btn-secondary"
+                    onclick={() => emailModal.openModal()}>{$_("change-email")}</button
+                >
+                <button class="btn-secondary" onclick={() => passwordModal.openModal()}
+                    >{$_("change-password")}</button
+                >
+            </div>
+        </div>
+        <div>
+            <div class="flex flex-wrap gap-3 justify-between items-center">
                 <h4 class="text-xl font-medium">{$_("api-tokens")}</h4>
                 <Button
                     secondary
@@ -151,12 +155,12 @@
             </div>
             <p class="mt-3">{$_("api-tokens-hint")}</p>
             {#if data.apiTokens.totalItems == 0}
-                <p class="text-center pt-8 pb-2 text-gray-500">
+                <p class="text-center pt-5 pb-2 text-gray-500">
                     {$_("no-api-tokens")}
                 </p>
             {:else}
                 <div
-                    class="border border-input-border rounded-xl overflow-clip mt-4"
+                    class="border border-input-border rounded-xl overflow-x-auto mt-3"
                 >
                     <table class="api-token-table w-full table-auto">
                         <thead class="text-left">
@@ -175,7 +179,7 @@
                                         >{token.expiration
                                             ? new Date(
                                                   token.expiration,
-                                              ).toLocaleDateString(undefined, {
+                                              ).toLocaleDateString($locale ?? undefined, {
                                                   month: "long",
                                                   day: "2-digit",
                                                   year: "numeric",
@@ -187,7 +191,7 @@
                                         >{token.last_used
                                             ? new Date(
                                                   token.last_used,
-                                              ).toLocaleTimeString(undefined, {
+                                              ).toLocaleTimeString($locale ?? undefined, {
                                                   month: "2-digit",
                                                   day: "2-digit",
                                                   year: "numeric",
@@ -200,7 +204,7 @@
                                         ><button
                                             onclick={() =>
                                                 deleteAPIToken(token)}
-                                            aria-label="delete api token"
+                                            aria-label={$_("delete-api-token")}
                                             ><i class="fa fa-trash"></i></button
                                         ></td
                                     >
@@ -211,7 +215,7 @@
                 </div>
             {/if}
         </div>
-        <div class="space-y-4">
+        <div class="space-y-3">
             <h4 class="text-xl text-red-400 font-medium">
                 {$_("danger-zone")}
             </h4>
@@ -243,7 +247,7 @@
 
 <style>
     .api-token-table th,
-    td {
-        padding: 16px;
+    .api-token-table td {
+        padding: 12px;
     }
 </style>
