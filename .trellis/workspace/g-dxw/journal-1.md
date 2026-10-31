@@ -79,3 +79,39 @@ Published protected dev-to-main PR31 at 2302b1b6 via successful Actions run40085
 ### Status
 
 [OK] **Completed**
+
+
+## Session 4: Dependabot PR queue maintenance
+<!-- trellis-session: v=2 fp=25ee98b89c4c90c3 -->
+
+**Date**: 2026-10-31
+**Task**: Dependabot PR queue maintenance
+**Branch**: `dev`
+
+### Summary
+
+Merged PR #42 to activate bounded Dependabot version updates on dev; reduced open dependency PRs from 11 to 3 and cancelled the configuration-only production workflow.
+
+### Main Changes
+
+- All eight update tasks now target dev, cap open version PRs at one per task, and allow minor/patch only; monthly schedules, groups and seven-day cooldowns are preserved. GitHub security update behavior is unchanged.
+- Closed deferred major PRs #1, #5, #6, #9, #11, #12, #22 and #23; retargeted and synchronized #24, #25 and #26 to dev without merging dependencies.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `d5179301b09576d68cb89990687ec35364a52bcc` | chore(deps): route bounded maintenance updates through dev |
+
+### Testing
+
+- [OK] YAML semantic validation, independent policy review, GitHub Dependabot configuration check, all eight check-runs, 110 Playwright tests and 572 unit tests passed; 11 existing unit tests skipped.
+- [OK] Production workflow 41168193257 was cancelled before image-build/deploy steps; original 27 dirty paths and working-tree diff remained unchanged.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Review the three retained dependency PRs on dev separately; the Go update also changes its runtime requirement and PocketBase version.
