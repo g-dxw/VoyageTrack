@@ -19,7 +19,7 @@
     import { isRouteProtected } from "$lib/util/authorization_util";
     import { onMount, type Snippet } from "svelte";
     import { slide } from "svelte/transition";
-    import { _ } from "svelte-i18n";
+    import { _, locale } from "svelte-i18n";
     import "../css/app.css";
     import "../css/components.css";
     import "../css/theme.css";
@@ -31,6 +31,10 @@
     }
 
     let { data, children }: Props = $props();
+
+    $effect(() => {
+        document.documentElement.lang = $locale === "zh" ? "zh-CN" : ($locale ?? "en");
+    });
 
     beforeNavigate((n) => {
         if (!$currentUser && isRouteProtected(n.to?.url)) {
@@ -194,12 +198,9 @@
         out:slide
     >
         <div></div>
-        <span
-            >This is a demo instance. Do not store any relevant data here. You
-            can use the user 'demo' and password 'password' to login.
-        </span>
+        <span>{$_("demo-instance-hint")}</span>
         <button
-            aria-label="Close"
+            aria-label={$_("close")}
             class="btn-icon self-end"
             onclick={() => (hideDemoHint = true)}
             ><i class="fa fa-close"></i></button
@@ -214,15 +215,14 @@
     >
         <div></div>
         <p>
-            You are accessing wanderer from <span class="font-mono bg-gray-100"
+            {$_("origin-warning-current")} <span class="font-mono bg-gray-100"
                 >{location.origin}</span
             >
-            but your ORIGIN environment variable is set to
-            <span class="font-mono bg-gray-100">{page.data.origin}</span>. This
-            may cause errors.
+            {$_("origin-warning-configured")}
+            <span class="font-mono bg-gray-100">{page.data.origin}</span>{$_("origin-warning-consequence")}
         </p>
         <button
-            aria-label="Close"
+            aria-label={$_("close")}
             class="btn-icon self-end"
             onclick={() => (showWarning = false)}
             ><i class="fa fa-close"></i></button

@@ -7,7 +7,7 @@ async function openSecondEditorLink(page: Page) {
     await expect(parent).toHaveAttribute('open');
     const editor = page.getByTestId('editor-beta');
     await expect(editor.locator('.ProseMirror')).toHaveText('Beta content');
-    await editor.locator('button[aria-label="Link"]').first().click();
+    await editor.getByRole('button', { name: 'link', exact: true }).click();
     const linkDialog = editor.locator('dialog[open]');
     await expect(linkDialog).toHaveCount(1);
     return { parent, editor, linkDialog };

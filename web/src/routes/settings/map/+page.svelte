@@ -64,16 +64,16 @@
             show_toast({
                 type: "error",
                 icon: "close",
-                text: "Error updating behavior settings",
+                text: $_("error-saving-settings"),
             });
             console.error(e);
         }
     }
 
-    const mapFocus: SelectItem[] = [
+    const mapFocus: SelectItem[] = $derived([
         { text: $_("trail", { values: { n: 2 } }), value: "trails" },
         { text: $_("location"), value: "location" },
-    ];
+    ]);
 
     let selectedLanguage = "en";
     let selectedMapFocus = $state("trails");
@@ -195,9 +195,9 @@
     <title>{$_("settings")} | wanderer</title>
 </svelte:head>
 <h2 class="text-2xl font-semibold">{$_("map")}</h2>
-<hr class="mt-4 mb-6 border-input-border" />
+<hr class="mt-3 mb-4 border-input-border" />
 {#if $currentUser}
-    <div class="space-y-12">
+    <div class="space-y-6 md:space-y-8">
         <div>
             <h4 class="text-xl font-medium mb-2">{$_("focus-map-on")}</h4>
             <Select
@@ -217,10 +217,9 @@
                     ></Search>
                 </div>
             {/if}
-            <div class="mt-8 space-y-4">
+            <div class="mt-5 space-y-3">
                 <div
-                    class="grid gap-4 items-center"
-                    style="grid-template-columns: 1fr min-content ;"
+                    class="grid gap-2 sm:gap-4 items-center grid-cols-[minmax(0,1fr)_max-content]"
                 >
                     <p>{$_("allow-auto-geolocate")}</p>
                     <div>
@@ -231,15 +230,14 @@
                     </div>
                 </div>
                 <div
-                    class="grid gap-4 items-center"
-                    style="grid-template-columns: 1fr min-content ;"
+                    class="grid gap-2 sm:gap-4 items-center sm:grid-cols-[minmax(0,1fr)_max-content]"
                 >
                     <p>{$_("map-trail-preview-zoom-level")}</p>
-                    <div class="flex items-center gap-4 w-56">
+                    <div class="flex items-center gap-3 w-full sm:w-56">
                         <span class="w-8 text-right tabular-nums">
                             {Math.round(Number(mapClusteringMaxZoom))}
                         </span>
-                        <div class="w-44">
+                        <div class="flex-1 min-w-0">
                             <Slider
                                 minValue={0}
                                 maxValue={22}
@@ -251,8 +249,7 @@
                     </div>
                 </div>
                 <div
-                    class="grid gap-4 items-center"
-                    style="grid-template-columns: 1fr min-content ;"
+                    class="grid gap-2 sm:gap-4 items-center grid-cols-[minmax(0,1fr)_max-content]"
                 >
                     <p>{$_("show-trail-start-marker")}</p>
                     <div>
@@ -271,35 +268,37 @@
                 <div
                     class="flex items-center justify-between px-4 py-2 border border-input-border rounded-xl mb-2"
                 >
-                    <div>
+                    <div class="min-w-0">
                         <p>{tileset.name}</p>
-                        <p class="text-sm text-gray-500">{tileset.url}</p>
+                        <p class="text-sm text-gray-500 break-all">{tileset.url}</p>
                     </div>
                     <button
-                        aria-label="Delete tileset"
+                        aria-label={$_("delete-tileset")}
                         class="btn-icon"
                         onclick={() => handleTilesetDelete(i)}
                         ><i class="fa fa-trash text-red-500"></i></button
                     >
                 </div>
             {/each}
-            <div class="flex gap-4 items-center">
-                <TextField
-                    label={$_("name")}
-                    bind:value={customTilesetName}
-                    placeholder={$_("name")}
-                ></TextField>
-                <div class="flex items-center basis-full gap-2">
-                    <div class="flex-grow">
+            <div class="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] items-end">
+                <div class="min-w-0">
+                    <TextField
+                        label={$_("name")}
+                        bind:value={customTilesetName}
+                        placeholder={$_("name")}
+                    ></TextField>
+                </div>
+                <div class="flex items-end min-w-0 gap-2">
+                    <div class="flex-1 min-w-0">
                         <TextField
-                            label="URL"
+                            label={$_("url")}
                             bind:value={customTilesetURL}
                             placeholder="https://.../style.json"
                         ></TextField>
                     </div>
                     <button
-                        aria-label="Add tileset"
-                        class="btn-icon mt-6"
+                        aria-label={$_("add-tileset")}
+                        class="btn-icon shrink-0"
                         onclick={handleTilesetAdd}
                         ><i class="fa fa-plus"></i></button
                     >
@@ -308,9 +307,9 @@
         </div>
 
         <div>
-            <h4 class="text-xl font-medium mb-2">Tianditu</h4>
-            <div class="flex items-center gap-2">
-                <div class="basis-full">
+            <h4 class="text-xl font-medium mb-2">{$_("tianditu")}</h4>
+            <div class="flex items-end gap-2">
+                <div class="flex-1 min-w-0">
                     <TextField
                         name="tianditu-key"
                         label={$_("tianditu-api-key")}
@@ -323,7 +322,7 @@
                 <button
                     aria-label={$_("save-tianditu-api-key")}
                     disabled={!tiandituKeySaveEnabled}
-                    class="btn-icon mt-6"
+                    class="btn-icon shrink-0"
                     class:hover:!bg-background={!tiandituKeySaveEnabled}
                     onclick={handleTiandituKeySave}
                     class:text-gray-500={!tiandituKeySaveEnabled}
@@ -333,26 +332,26 @@
         </div>
 
         <div>
-            <h4 class="text-xl font-medium mb-2">{$_("Terrain")}</h4>
-            <div class="flex items-center gap-2">
-                <div class="basis-full">
+            <h4 class="text-xl font-medium mb-2">{$_("terrain")}</h4>
+            <div class="grid grid-cols-[minmax(0,1fr)_auto] sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-end gap-3">
+                <div class="col-span-2 sm:col-span-1 min-w-0">
                     <TextField
-                        label="Terrain URL"
+                        label={$_("terrain-url")}
                         bind:value={terrainURL}
                         placeholder="https://.../tiles.json"
                     ></TextField>
                 </div>
-                <div class="basis-full">
+                <div class="min-w-0">
                     <TextField
-                        label="Hillshading URL"
+                        label={$_("hillshading-url")}
                         bind:value={hillshadingURL}
                         placeholder="https://.../tiles.json"
                     ></TextField>
                 </div>
                 <button
-                    aria-label="Save terrain settings"
+                    aria-label={$_("save-terrain-settings")}
                     disabled={!terrainSaveEnabled}
-                    class="btn-icon mt-6"
+                    class="btn-icon shrink-0"
                     class:hover:!bg-background={!terrainSaveEnabled}
                     onclick={handleTerrainAdd}
                     class:text-gray-500={!terrainSaveEnabled}

@@ -103,13 +103,13 @@
 
         const trailItems = (r[0]?.hits || []).map((t: TrailSearchResult) => ({
             text: t.name,
-            description: `Trail ${t.location.length ? ", " + t.location : ""}`,
+            description: `${$_("trail", { values: { n: 1 } })}${t.location.length ? ", " + t.location : ""}`,
             value: `@${t.author_name}${t.domain ? `@${t.domain}` : ""}/${t.id}`,
             icon: "route",
         }));
         const listItems = (r[1]?.hits || []).map((t: ListSearchResult) => ({
             text: t.name,
-            description: `List, ${t.trails} ${$_("trail", { values: { n: t.trails } })}`,
+            description: `${$_("list", { values: { n: 1 } })}, ${t.trails} ${$_("trail", { values: { n: t.trails } })}`,
             value: t.id,
             icon: "layer-group",
         }));
@@ -359,10 +359,10 @@
 <main class="grid grid-cols-1 md:grid-cols-[400px_1fr]">
     <div
         id="trail-list"
-        class="flex flex-col items-stretch gap-4 px-3 md:px-8 overflow-y-scroll"
+        class="flex flex-col items-stretch gap-3 px-3 md:px-5 overflow-y-scroll"
         onscroll={onListScroll}
     >
-        <div class="sticky top-0 z-10 bg-background pb-4">
+        <div class="sticky top-0 z-10 bg-background pb-2">
             <div class="flex items-center gap-2 md:gap-4">
                 <Search
                     extraClasses="w-full"
@@ -372,7 +372,7 @@
                     items={searchDropdownItems}
                 ></Search>
                 <button
-                    aria-label="Toggle map"
+                    aria-label={$_("toggle-map")}
                     class="btn-icon md:hidden"
                     onclick={() => (showMap = !showMap)}
                     ><i
@@ -382,14 +382,14 @@
                     ></i></button
                 >
             </div>
-            <div class="flex items-center gap-2 mt-2 mb-4">
+            <div class="flex items-center gap-2 mt-2 mb-2">
                 <Select
                     bind:value={filter.sort}
                     items={sortOptions}
                     onchange={setSort}
                 ></Select>
                 <button
-                    aria-label="Change sort order"
+                    aria-label={$_("change-sort-order")}
                     id="sort-order-btn"
                     class="btn-icon"
                     class:rotated={filter.sortOrder == "-"}
@@ -398,7 +398,7 @@
                 >
                 <div class="basis-full"></div>
                 <button
-                    aria-label="Open filter"
+                    aria-label={$_("open-filter")}
                     class="btn-icon"
                     onclick={() => (showFilter = !showFilter)}
                     ><i class="fa fa-sliders"></i></button
@@ -471,12 +471,18 @@
 
 <style>
     #trail-map {
-        height: calc(100vh - 180px);
+        /* Two 44px control rows plus their 24px spacing on small screens. */
+        height: calc(100dvh - var(--app-header-height) - 7rem);
+    }
+    @media only screen and (min-width: 640px) and (max-width: 767px) {
+        #trail-map {
+            height: calc(100dvh - var(--app-header-height) - 6rem);
+        }
     }
     @media only screen and (min-width: 768px) {
         #trail-map,
         #trail-list {
-            height: calc(100vh - 124px);
+            height: calc(100dvh - var(--app-header-height) - 12px);
         }
     }
 

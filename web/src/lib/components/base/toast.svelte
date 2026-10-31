@@ -1,6 +1,7 @@
 <script lang="ts">
     import { closeToast, toastStore } from "$lib/stores/toast_store.svelte";
     import { fade } from "svelte/transition";
+    import { _ } from "svelte-i18n";
 </script>
 
 {#each toastStore.toasts as t, i}
@@ -25,7 +26,7 @@
             onclick={() => closeToast(t)}
         >
             <i class="fa fa-close"></i>
-            <span class="sr-only">Close modal</span>
+            <span class="sr-only">{$_("close")}</span>
         </button>
     </div>
 {/each}

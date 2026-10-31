@@ -39,9 +39,7 @@
 >
     {#snippet content()}
         <p class="max-w-lg">
-            Please copy your new API token now. For your security, we cannot
-            show it to you again. If you lose this token, you will need to
-            delete it and generate a new one.
+            {$_("api-token-copy-warning")}
         </p>
         <div class="flex items-center gap-x-4 flex-nowrap">
             <div class="flex-1">
@@ -50,7 +48,7 @@
             <button
                 class="btn-secondary"
                 onclick={() => copyTokenToClipboard()}
-                aria-label="copy token to clipboard"
+                aria-label={$_("copy-token")}
                 ><i class="fa {copied ? 'fa-check' : 'fa-clipboard'}"
                 ></i></button
             >

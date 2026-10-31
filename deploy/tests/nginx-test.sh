@@ -38,4 +38,15 @@ docker run --rm \
   "$NGINX_IMAGE" \
   nginx -t
 
+docker run --rm \
+  --volume "$REPOSITORY_ROOT/deploy/nginx/track.cqaiclub.online-http-bootstrap.conf:/etc/nginx/conf.d/default.conf:ro" \
+  "$NGINX_IMAGE" \
+  nginx -t
+
+docker run --rm \
+  --volume "$REPOSITORY_ROOT/deploy/nginx/track.cqaiclub.online.conf:/etc/nginx/conf.d/default.conf:ro" \
+  --volume "$CERTIFICATE_DIR:/etc/letsencrypt/live/track.cqaiclub.online:ro" \
+  "$NGINX_IMAGE" \
+  nginx -t
+
 printf 'Nginx templates: ok\n'

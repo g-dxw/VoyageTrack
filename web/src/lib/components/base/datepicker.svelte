@@ -1,5 +1,6 @@
 <script lang="ts">
     import { _ } from "svelte-i18n";
+    import { translateValidationError } from "$lib/util/validation_i18n";
     import type { ChangeEventHandler } from "svelte/elements";
 
     interface Props {
@@ -32,7 +33,7 @@
     <div class="flex items-center gap-2">
         <input
             {name}
-            class="bg-input-background border border-input-border rounded-md p-3 transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0 w-full dark:[color-scheme:dark]"
+            class="bg-input-background border border-input-border rounded-md min-h-11 sm:min-h-9 px-3 py-2 sm:py-1.5 leading-5 transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0 min-w-0 w-full dark:[color-scheme:dark]"
             class:border-red-400={(error?.length ?? 0) > 0}
             class:bg-input-background-error={(error?.length ?? 0) > 0}
             type="date"
@@ -45,7 +46,7 @@
 
     {#if error}
         <span class="textfield-error text-xs text-red-400">
-            {error instanceof Array ? $_(error[0]) : error}
+            {translateValidationError(error, $_)}
         </span>
     {/if}
 </div>

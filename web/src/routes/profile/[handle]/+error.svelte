@@ -3,6 +3,7 @@
     import errorDark from "$lib/assets/svgs/empty_states/error_dark.svg";
     import errorLight from "$lib/assets/svgs/empty_states/error_light.svg";
     import { theme } from "$lib/stores/theme_store";
+    import { _ } from "svelte-i18n";
 </script>
 
 <svelte:head>
@@ -16,14 +17,14 @@
         class="aspect-square rounded-xl mx-auto"
         width="300"
         src={$theme === "light" ? errorLight : errorDark}
-        alt="Default error img"
+        alt={$_("error-illustration")}
     />
     <div class="text-center mt-8">
         <h1 class="font-bold" style="line-height: 4rem;">
             {page.status}
         </h1>
         <p class="text-lg text-center mt-2">
-            {page.error?.message}
+            {$_(page.status === 404 ? "error-not-found" : "error-unexpected")}
         </p>
     </div>
 </div>

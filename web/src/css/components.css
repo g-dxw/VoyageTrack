@@ -10,20 +10,31 @@
     --tooltip-padding: 6px 10px;
 }
 
-.btn-primary {
-    @apply min-h-10 text-white rounded-lg px-4 py-2 bg-primary font-semibold transition-all hover:bg-primary-hover focus:ring-4 ring-input-ring
+.prose:not(:where(.prose-sm, .prose-lg, .prose-xl, .prose-2xl)) {
+    font-size: var(--text-base);
+    line-height: 1.6;
 }
 
-.btn-large {
-    @apply h-12 leading-8
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+    @apply inline-flex items-center justify-center text-center break-words;
+}
+
+.btn-primary {
+    @apply min-h-11 sm:min-h-9 text-white rounded-lg px-3 py-1.5 leading-5 bg-primary font-semibold transition-all hover:bg-primary-hover focus:ring-4 ring-input-ring
 }
 
 .btn-secondary {
-    @apply rounded-lg px-4 py-2 border border-input-border-focus font-medium transition-all hover:bg-secondary-hover focus:ring-4 ring-input-ring
+    @apply min-h-11 sm:min-h-9 rounded-lg px-3 py-1.5 leading-5 border border-input-border-focus font-medium transition-all hover:bg-secondary-hover focus:ring-4 ring-input-ring
 }
 
 .btn-danger {
-    @apply h-10 text-white rounded-lg px-4 py-2 bg-red-500 font-semibold transition-all hover:bg-red-600 focus:ring-4 ring-red-100
+    @apply min-h-11 sm:min-h-9 text-white rounded-lg px-3 py-1.5 leading-5 bg-red-500 font-semibold transition-all hover:bg-red-600 focus:ring-4 ring-red-100
+}
+
+.btn-large {
+    @apply min-h-11 sm:min-h-10 px-4 py-2 leading-5
 }
 
 .btn-disabled {
@@ -31,7 +42,7 @@
 }
 
 .btn-icon {
-    @apply rounded-full aspect-square h-8 text-lg hover:bg-secondary-hover focus:ring-4 ring-input-ring transition-colors;
+    @apply shrink-0 rounded-full aspect-square h-11 w-11 sm:h-8 sm:w-8 text-lg hover:bg-secondary-hover focus:ring-4 ring-input-ring transition-colors;
 }
 
 .tab {

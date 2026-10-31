@@ -1,0 +1,2 @@
+{"file":".trellis/spec/frontend/component-guidelines.md","reason":"Keep visible copy in existing locale resources and preserve component contracts"}
+{"file":".trellis/spec/frontend/quality-guidelines.md","reason":"Run frontend checks and verify SSR/client localization"}

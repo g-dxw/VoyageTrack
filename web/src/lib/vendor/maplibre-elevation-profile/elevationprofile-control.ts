@@ -4,6 +4,8 @@ import { ElevationProfile, type ElevationProfileOptions } from "./elevationprofi
 // @ts-ignore
 import type { GeoJsonObject, Position } from "geojson";
 import type { Waypoint } from "$lib/models/waypoint";
+import { _ } from "svelte-i18n";
+import { get } from "svelte/store";
 
 /**
  * Elevation profile control options
@@ -99,6 +101,8 @@ export class ElevationProfileControl implements IControl {
             "maplibregl-ctrl-group"
         );
         this.toggleButton = document.createElement("button");
+        this.toggleButton.title = get(_)("toggle-elevation-profile");
+        this.toggleButton.setAttribute("aria-label", this.toggleButton.title);
         this.buttonContainer.appendChild(this.toggleButton);
         this.iconSpan = document.createElement("i");
         this.iconSpan.classList.add("fa", "fa-chart-line", "text-black");

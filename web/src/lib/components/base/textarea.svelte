@@ -3,6 +3,7 @@
 
     const bubble = createBubbler();
     import { _ } from "svelte-i18n";
+    import { translateValidationError } from "$lib/util/validation_i18n";
 
     interface Props {
         name?: string;
@@ -33,7 +34,7 @@
     {/if}
     <textarea
         {name}
-        class="bg-input-background border border-input-border rounded-md p-3 resize-none transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0 w-full {extraClasses}"
+        class="bg-input-background border border-input-border rounded-md min-h-11 sm:min-h-9 px-3 py-2 sm:py-1.5 resize-none transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0 w-full {extraClasses}"
         {rows}
         {placeholder}
         class:border-red-400={(error?.length ?? 0) > 0}
@@ -43,7 +44,7 @@
 ></textarea>
     {#if error}
         <span class="textfield-error text-xs text-red-400">
-            {error instanceof Array ? $_(error[0]) : error}
+            {translateValidationError(error, $_)}
         </span>
     {/if}
 </div>

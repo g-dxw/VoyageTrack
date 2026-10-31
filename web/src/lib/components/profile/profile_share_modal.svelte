@@ -51,7 +51,7 @@
     {#snippet content()}
         <div class="flex">
             <div class="space-y-2">
-                <img class="w-64" id="qrcode" alt="QR Code" />
+                <img class="w-64" id="qrcode" alt={$_("qr-code")} />
                 <button
                     class="btn-secondary w-full"
                     onclick={() => downloadQRCode()}
@@ -62,15 +62,14 @@
             </div>
             <div class="space-y-4">
                 <p>
-                    Send this link or the QR code on the left to someone to
-                    share your profile.
+                    {$_("share-profile-hint")}
                 </p>
                 <div class="flex gap-x-2 items-center">
                     <div class="basis-full">
                         <TextField value={page.url.href} disabled></TextField>
                     </div>
                     <button
-                    aria-label="Copy profile URL"
+                    aria-label={$_("copy-profile-url")}
                     class="btn-icon" onclick={copyURLToClipboard}>
                         <i class="fa-regular fa-copy"></i>
                     </button>

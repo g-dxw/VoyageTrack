@@ -288,7 +288,7 @@
 <main class="grid grid-cols-1 md:grid-cols-[440px_1fr]">
     <form
         id="list-form"
-        class="flex flex-col gap-4 px-8 order-1 md:order-none mt-8 md:mt-0 overflow-y-scroll"
+        class="flex flex-col gap-3 px-4 md:px-5 order-1 md:order-none mt-4 md:mt-0 overflow-y-auto overflow-x-hidden"
         use:form
     >
         <h2 class="text-2xl font-semibold">
@@ -305,16 +305,16 @@
             style="display: none;"
             onchange={handleAvatarSelection}
         />
-        <div class="flex items-center gap-4">
+        <div class="flex items-center gap-3">
             {#if previewURL.length > 0}
                 <img
-                    class="w-32 aspect-square rounded-full object-cover border border-gray-100"
-                    alt="avatar"
+                    class="w-20 shrink-0 aspect-square rounded-full object-cover border border-gray-100"
+                    alt={$_("avatar")}
                     src={previewURL}
                 />
             {:else}
                 <div
-                    class="w-32 aspect-square rounded-full bg-menu-item-background-focus border-gray-200"
+                    class="w-20 shrink-0 aspect-square rounded-full bg-menu-item-background-focus border-gray-200"
                 ></div>
             {/if}
             <button
@@ -350,7 +350,7 @@
         {#if $formData.expand?.trails?.length}
             {#each $formData.expand?.trails ?? [] as trail, i}
                 <div
-                    class="flex gap-4 p-4 rounded-xl border border-input-border cursor-pointer hover:bg-secondary-hover transition-colors items-center"
+                    class="flex gap-3 p-3 rounded-xl border border-input-border cursor-pointer hover:bg-secondary-hover transition-colors items-center"
                     class:bg-secondary-hover={i == activeTrailIndex}
                     role="presentation"
                     onmouseenter={() => map?.highlightTrail(trail.id ?? "")}
@@ -372,8 +372,8 @@
                             alt=""
                         />
                     </div>
-                    <div class="basis-full">
-                        <h4 class="font-semibold text-lg">
+                    <div class="basis-full min-w-0">
+                        <h4 class="font-semibold text-lg wrap-anywhere">
                             {trail.name}
                         </h4>
                         <span class="text-sm"
@@ -382,7 +382,7 @@
                             )}</span
                         >
                         <div
-                            class="grid grid-cols-2 mt-1 gap-x-4 gap-y-2 text-sm text-gray-500"
+                            class="grid grid-cols-2 mt-1 gap-x-3 gap-y-1 text-sm text-gray-500"
                         >
                             <span
                                 ><i class="fa fa-left-right mr-2"
@@ -406,10 +406,10 @@
                             >
                         </div>
                     </div>
-                    <div class="basis-0">
+                    <div class="basis-0 shrink-0">
                         {#if i > 0}
                             <button
-                                aria-label="Move up"
+                                aria-label={$_("move-up")}
                                 onclick={() => moveTrail(trail, i, -1)}
                                 type="button"
                                 class="btn-icon"
@@ -419,7 +419,7 @@
                         {/if}
                         {#if i < $formData.expand?.trails?.length - 1}
                             <button
-                                aria-label="Move down"
+                                aria-label={$_("move-down")}
                                 onclick={() => moveTrail(trail, i, 1)}
                                 type="button"
                                 class="btn-icon"
@@ -428,7 +428,7 @@
                             </button>
                         {/if}
                         <button
-                            aria-label="Remove trail"
+                            aria-label={$_("remove-trail")}
                             type="button"
                             class="btn-icon text-red-500"
                             onclick={() => deleteTrail(trail)}
@@ -438,13 +438,12 @@
                 </div>
             {/each}
         {:else}
-            <span class="text-center text-sm text-gray-500 my-8"
+            <span class="text-center text-sm text-gray-500 my-4"
                 >{$_("no-routes-added")}</span
             >
         {/if}
         <Button
             primary={true}
-            large={true}
             type="submit"
             extraClasses="mb-2"
             {loading}>{$_("save-list")}</Button
@@ -511,7 +510,7 @@
     @media only screen and (min-width: 768px) {
         #trail-map,
         #list-form {
-            height: calc(100vh - 124px);
+            height: calc(100dvh - var(--app-header-height) - 12px);
         }
     }
 </style>

@@ -11,6 +11,8 @@ readonly PB_DATA_DIR="$DATA_DIR/pb_data"
 readonly BACKUPS_DIR="$BASE_DIR/backups"
 readonly LOCK_FILE="/run/lock/voyagetrack-deploy.lock"
 readonly BACKUP_KEEP_COUNT=7
+readonly SEARCH_IMAGE="ghcr.io/g-dxw/voyagetrack-db:meilisearch-v1.36.0"
+readonly IMAGE_MIRRORS=("ghcr.1ms.run" "ghcr.nju.edu.cn")
 
 usage() {
   echo "Usage: $0 [--restore] <40-character-lowercase-git-sha>" >&2
@@ -38,10 +40,12 @@ fi
 readonly ROLLBACK_MODE RELEASE_SHA
 [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || usage
 readonly CANDIDATE_TAG="sha-$RELEASE_SHA"
+readonly DB_IMAGE="ghcr.io/g-dxw/voyagetrack-db:$CANDIDATE_TAG"
+readonly WEB_IMAGE="ghcr.io/g-dxw/voyagetrack-web:$CANDIDATE_TAG"
 
 [[ ${EUID:-$(id -u)} -eq 0 ]] || die "must run as root"
 
-for command_name in awk curl docker flock install mktemp realpath tar; do
+for command_name in awk curl docker flock install mktemp realpath sleep tar; do
   command -v "$command_name" >/dev/null 2>&1 || die "required command is missing: $command_name"
 done
 
@@ -236,8 +240,8 @@ prune_old_project_images() {
   local image_ref tag
 
   while IFS= read -r image_ref; do
-    [[ "$image_ref" =~ ^ghcr\.io/g-dxw/voyagetrack-(db|web):(sha-[0-9a-f]{40})$ ]] || continue
-    tag="${BASH_REMATCH[2]}"
+    [[ "$image_ref" =~ ^ghcr\.(io|1ms\.run|nju\.edu\.cn)/g-dxw/voyagetrack-(db|web):(sha-[0-9a-f]{40})$ ]] || continue
+    tag="${BASH_REMATCH[3]}"
     [[ "$tag" == "$CANDIDATE_TAG" || "$tag" == "$previous_tag" ]] && continue
     docker image rm "$image_ref" >/dev/null 2>&1 || true
   done < <(docker image ls --format '{{.Repository}}:{{.Tag}}')
@@ -251,6 +255,26 @@ verify_image_revision() {
     --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}' \
     "$image_ref") || die "could not inspect pulled image: $image_ref"
   [[ "$revision" == "$RELEASE_SHA" ]] || die "image revision does not match requested release: $image_ref"
+}
+
+pull_prebuilt_image() {
+  local official_ref="$1"
+  local source_path mirror mirror_ref attempt
+  source_path="${official_ref#ghcr.io/}"
+
+  for mirror in "${IMAGE_MIRRORS[@]}"; do
+    mirror_ref="$mirror/$source_path"
+    for attempt in 1 2; do
+      log "pulling $official_ref through $mirror (attempt $attempt)"
+      if docker pull --platform linux/amd64 "$mirror_ref"; then
+        docker tag "$mirror_ref" "$official_ref"
+        return 0
+      fi
+      sleep $((attempt * 5))
+    done
+  done
+
+  die "could not pull prebuilt image through the configured mirrors: $official_ref"
 }
 
 ORIGIN_VALUE=$(require_env_value ORIGIN)
@@ -294,10 +318,13 @@ readonly rollback_source_backup
 log "validating production configuration"
 compose_for "$CANDIDATE_TAG" config --quiet
 
-log "pulling immutable images for $RELEASE_SHA"
-compose_for "$CANDIDATE_TAG" pull search db web
-verify_image_revision "ghcr.io/g-dxw/voyagetrack-db:$CANDIDATE_TAG"
-verify_image_revision "ghcr.io/g-dxw/voyagetrack-web:$CANDIDATE_TAG"
+log "pulling prebuilt production images for $RELEASE_SHA"
+pull_prebuilt_image "$SEARCH_IMAGE"
+pull_prebuilt_image "$DB_IMAGE"
+pull_prebuilt_image "$WEB_IMAGE"
+log "validating immutable image provenance for $RELEASE_SHA"
+verify_image_revision "$DB_IMAGE"
+verify_image_revision "$WEB_IMAGE"
 
 timestamp=$(date -u +%Y%m%dT%H%M%S%NZ)
 backup_path="$BACKUPS_DIR/pb_data-$timestamp-${previous_release:-initial}.tar.gz"

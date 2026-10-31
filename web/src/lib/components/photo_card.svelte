@@ -53,7 +53,7 @@
     >
         {#if showThumbnailControls}
             <button
-                aria-label="Make thumbnail"
+                aria-label={$_("make-thumbnail")}
                 type="button"
                 class="tooltip"
                 data-title={$_("make-thumbnail")}
@@ -63,7 +63,7 @@
         {/if}
         {#if showExifControls}
             <button
-                aria-label="Get EXIF coordinates"
+                aria-label={$_("get-position-from-exif")}
                 type="button"
                 class="tooltip"
                 data-title={$_("get-position-from-exif")}
@@ -73,7 +73,7 @@
             >
         {/if}
         <button
-            aria-label="Delete photo"
+            aria-label={$_("delete-photo")}
             class="tooltip"
             data-title={$_("delete")}
             onclick={handleDeleteClick}

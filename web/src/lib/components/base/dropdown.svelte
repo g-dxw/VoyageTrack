@@ -11,6 +11,7 @@
 <script lang="ts">
     import { tick, type Snippet } from "svelte";
     import { fly } from "svelte/transition";
+    import { _ } from "svelte-i18n";
 
     interface Props {
         items?: DropdownItem[];
@@ -112,7 +113,7 @@
     <div class="dropdown-toggle" bind:this={dropdownToggleElement}>
         {#if children}{@render children({ toggleMenu })}{:else}
             <button
-                aria-label="Toggle menu"
+                aria-label={$_("toggle-menu")}
                 class="btn-icon flex items-center justify-center"
                 onclick={toggleMenu}
                 type="button"
@@ -124,7 +125,7 @@
 
     {#if isOpen}
         <ul
-            class="menu absolute bg-menu-background border border-input-border shadow-md rounded-l-xl rounded-b-xl right-0 overflow-hidden"
+            class="menu absolute w-max max-w-[calc(100vw-2rem)] bg-menu-background border border-input-border shadow-md rounded-l-xl rounded-b-xl right-0 overflow-hidden"
             class:none={isOpen}
             style="z-index: 1001"
             in:fly={{ y: -10, duration: 150 }}
@@ -133,21 +134,21 @@
         >
             {#each items as item}
                 {#if item.separator}
-                    <li class="px-3 py-2" role="separator" aria-hidden="true">
+                    <li class="px-3 py-1" role="separator" aria-hidden="true">
                         <div class="border-t border-input-border"></div>
                     </li>
                 {:else}
                     <li
-                        class="menu-item flex items-center px-4 py-3 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
+                        class="menu-item flex min-h-11 sm:min-h-9 items-center px-3 py-1.5 cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
                         class:hover:text-red-500={item.danger}
                         class:focus:text-red-500={item.danger}
                         role="presentation"
                         onclick={(e) => handleItemClick(e, item as { text: string; value: any })}
                     >
                         {#if item.icon}
-                            <i class="fa fa-{item.icon} mr-3"></i>
+                            <i class="fa fa-{item.icon} mr-3 shrink-0"></i>
                         {/if}
-                        <span class="whitespace-nowrap">{item.text}</span>
+                        <span class="min-w-0 break-words">{item.text}</span>
                     </li>
                 {/if}
             {/each}

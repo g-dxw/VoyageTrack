@@ -77,7 +77,7 @@
 
 <button
     class="like-button rounded-full w-12 py-2 bg-background {$currentUser ? 'hover:bg-secondary-hover' : ''} transition-colors relative"
-    aria-label="like"
+    aria-label={$_(trailLike ? "unlike" : "like")}
     type="button"
     bind:this={likeButton}
     disabled={!$currentUser}

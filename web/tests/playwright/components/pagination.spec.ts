@@ -61,7 +61,7 @@ for (const dev of [true, false]) {
         test('refreshes profile pagination metadata after a filter update', async ({ page }) => {
             const { response } = await mountPaginationFixture(page, bundle);
             response.total = 24;
-            await page.getByRole('button', { name: 'Change sort order' }).click();
+            await page.getByRole('button', { name: 'change-sort-order', exact: true }).click();
             await expect(page.getByRole('button', { name: '10', exact: true })).toHaveCount(0);
             await page.getByRole('button', { name: '2', exact: true }).first().click();
             await expectTrails(page, 13, 12);

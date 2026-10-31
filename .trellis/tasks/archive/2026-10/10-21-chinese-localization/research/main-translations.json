@@ -1,0 +1,26 @@
+{
+  "about-content": {
+    "en": "Welcome to wanderer, a self-hosted service for managing and sharing your outdoor adventures.\n\nWith wanderer you can:\n- Upload and store your GPS tracks (GPX files)\n- Organize routes with descriptions, waypoints, photos, and tags\n- Search and filter through your personal trail library\n- Optionally connect with other wanderer instances via ActivityPub to share tracks across the Fediverse\n- And much more\n\nwanderer is designed for explorers who value privacy, control, and open technology.",
+    "zh": "欢迎使用 wanderer。这是一款可以自行部署的户外路线管理与分享工具。\n\n使用 wanderer，您可以：\n- 上传并保存 GPS 轨迹（GPX 文件）\n- 为路线添加描述、路径点、照片和标签\n- 搜索和筛选个人路线库\n- 通过 ActivityPub 与其他 wanderer 站点互联，在联邦社交网络中分享路线\n- 探索更多户外活动功能\n\nwanderer 为重视隐私、自主掌控数据与开放技术的户外爱好者而设计。"
+  },
+  "wanderer-diorama": { "en": "wanderer outdoor diorama", "zh": "wanderer 户外场景模型" },
+  "empty-trails-illustration": { "en": "No trails to display", "zh": "暂无可显示的路线" },
+  "signup-or-login": { "en": "Sign up or log in", "zh": "注册或登录" },
+  "demo-instance-hint": { "en": "This is a demo instance. Do not store any important data here. You can log in with username 'demo' and password 'password'.", "zh": "这是演示站点，请勿存放重要数据。可使用用户名 demo 和密码 password 登录。" },
+  "origin-warning-current": { "en": "You are accessing wanderer from", "zh": "您当前访问 wanderer 的地址是" },
+  "origin-warning-configured": { "en": "but the ORIGIN environment variable is set to", "zh": "，但 ORIGIN 环境变量配置的地址是" },
+  "origin-warning-consequence": { "en": ". This may cause errors.", "zh": "。地址不一致可能导致功能异常。" },
+  "error-illustration": { "en": "Error illustration", "zh": "页面错误插图" },
+  "error-not-found": { "en": "The requested page or content could not be found.", "zh": "找不到请求的页面或内容。" },
+  "error-sign-in-required": { "en": "Please log in before accessing this content.", "zh": "请先登录后再访问此内容。" },
+  "error-forbidden": { "en": "You do not have permission to access this content.", "zh": "您没有权限访问此内容。" },
+  "error-invalid-request": { "en": "The request is invalid. Please check and try again.", "zh": "请求无效，请检查后重试。" },
+  "error-unexpected": { "en": "The service could not complete the request. Please try again later.", "zh": "服务暂时无法处理请求，请稍后重试。" },
+  "validation-invalid-value": { "en": "Please enter a valid value.", "zh": "请输入有效的值。" },
+  "validation-invalid-number": { "en": "Please enter a valid number.", "zh": "请输入有效的数字。" },
+  "validation-text-exact-length": { "en": "Must be exactly {n} characters long", "zh": "必须为 {n} 个字符" },
+  "validation-number-min-inclusive": { "en": "Must be at least {n}", "zh": "数值不能小于 {n}" },
+  "validation-number-max-inclusive": { "en": "Must be at most {n}", "zh": "数值不能大于 {n}" },
+  "validation-number-min-exclusive": { "en": "Must be greater than {n}", "zh": "数值必须大于 {n}" },
+  "validation-number-max-exclusive": { "en": "Must be less than {n}", "zh": "数值必须小于 {n}" }
+}

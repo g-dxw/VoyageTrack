@@ -147,7 +147,7 @@
     ondrop={handlePhotoDrop}
 >
     <button
-        aria-label="Open photo browser"
+        aria-label={$_("open-photo-browser")}
         class="btn-secondary h-32 w-32 shrink-0 grow-0 basis-auto"
         type="button"
         onclick={openPhotoBrowser}><i class="fa fa-plus"></i></button

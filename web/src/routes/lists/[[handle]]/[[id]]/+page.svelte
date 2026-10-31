@@ -244,11 +244,12 @@
     <div
         class="list-list relative md:mx-auto rounded-xl border border-input-border max-h-full w-full order-1 md:order-none"
     >
-        <div
-            class="flex gap-x-3 items-center px-3 py-4 bg-background z-50 rounded-xl"
-        >
+        <div class="relative shrink-0">
+            <div
+                class="flex gap-x-2 items-center px-3 py-3 bg-background z-50 rounded-xl"
+            >
             <button
-                aria-label="Back"
+                aria-label={$_("back")}
                 class="btn-icon"
                 class:btn-disabled={!selectedList}
                 disabled={!selectedList}
@@ -257,14 +258,14 @@
             <Search bind:value={filter.q} onupdate={() => updateFilter()}
             ></Search>
             <button
-                aria-label="Toggle filter"
+                aria-label={$_("toggle-filter")}
                 class="btn-icon"
                 onclick={() => (filterExpanded = !filterExpanded)}
                 ><i class="fa fa-sliders"></i></button
             >
             {#if $currentUser}
                 <a
-                    aria-label="New list"
+                    aria-label={$_("new-list")}
                     class="btn-primary tooltip"
                     data-title={$_("new-list")}
                     href="/lists/edit/new"><i class="fa fa-plus"></i></a
@@ -273,19 +274,19 @@
         </div>
         {#if filterExpanded}
             <div
-                class="absolute bg-background z-10 shadow-lg border-b border-input-border rounded-b-xl w-full px-14"
+                class="absolute top-full left-0 bg-background z-10 shadow-lg border-b border-input-border rounded-b-xl w-full px-4 py-3"
                 in:slide
                 out:slide
             >
                 <p class="text-sm font-medium pb-1">{$_("sort")}</p>
-                <div class="flex items-center gap-2" class:mb-6={!$currentUser}>
+                <div class="flex items-center gap-2" class:mb-3={!$currentUser}>
                     <Select
                         bind:value={filter.sort}
                         items={sortOptions}
                         onchange={setSort}
                     ></Select>
                     <button
-                        aria-label="Set sort order"
+                        aria-label={$_("change-sort-order")}
                         id="sort-order-btn"
                         class="btn-icon"
                         class:rotated={filter.sortOrder == "-"}
@@ -330,6 +331,7 @@
                 {/if}
             </div>
         {/if}
+        </div>
         <hr class="border-separator" />
 
         <div
@@ -408,11 +410,18 @@
 <style>
     @media only screen and (min-width: 768px) {
         #trail-map {
-            height: calc(100vh - 124px);
+            height: calc(100dvh - var(--app-header-height) - 12px);
+        }
+
+        .list-list {
+            display: flex;
+            flex-direction: column;
+            height: calc(100dvh - var(--app-header-height) - 12px);
         }
 
         #list-container {
-            height: calc(100vh - 204px);
+            flex: 1;
+            min-height: 0;
         }
     }
 </style>

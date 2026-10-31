@@ -86,9 +86,9 @@
     <title>{$_("settings")} | wanderer</title>
 </svelte:head>
 <h2 class="text-2xl font-semibold">{$_("privacy")}</h2>
-<hr class="mt-4 mb-6 border-input-border" />
+<hr class="mt-3 mb-4 border-input-border" />
 
-<h4 class="text-xl font-medium mb-4">{$_("account-privacy")}</h4>
+<h4 class="text-xl font-medium mb-3">{$_("account-privacy")}</h4>
 <RadioGroup
     name="account"
     items={accoutPrivacyItems}
@@ -96,7 +96,7 @@
     onchange={handleAccountSelection}
 ></RadioGroup>
 
-<h4 class="text-xl font-medium mt-12 mb-4">
+<h4 class="text-xl font-medium mt-6 mb-3">
     {$_("trail", { values: { n: 2 } })}
 </h4>
 <RadioGroup
@@ -106,7 +106,7 @@
     onchange={handleTrailsSelection}
 ></RadioGroup>
 
-<h4 class="text-xl font-medium mt-12 mb-4">
+<h4 class="text-xl font-medium mt-6 mb-3">
     {$_("list", { values: { n: 2 } })}
 </h4>
 <RadioGroup

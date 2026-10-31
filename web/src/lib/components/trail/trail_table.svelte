@@ -6,7 +6,7 @@
         formatElevation,
         formatTimeHHMM,
     } from "$lib/util/format_util";
-    import { _ } from "svelte-i18n";
+    import { _, locale } from "svelte-i18n";
     import type { SelectItem } from "../base/select.svelte";
     import ShareInfo from "../share_info.svelte";
 
@@ -180,7 +180,7 @@
                                             class="rounded-full w-5 aspect-square mx-1 inline"
                                             src={trail.expand.author.icon ||
                                                 `https://api.dicebear.com/7.x/initials/svg?seed=${trail.expand.author.preferred_username}&backgroundType=gradientLinear`}
-                                            alt="avatar"
+                                            alt={$_("avatar")}
                                         />
                                     </div>
                                 {/if}
@@ -218,7 +218,7 @@
                         <td class="p-4 text-sm">
                             {#if trail.created}
                                 {new Date(trail.created).toLocaleDateString(
-                                    undefined,
+                                    $locale ?? undefined,
                                     {
                                         month: "2-digit",
                                         day: "2-digit",
@@ -231,7 +231,7 @@
                         <td class="p-4 text-sm">
                             {#if trail.date}
                                 {new Date(trail.date).toLocaleDateString(
-                                    undefined,
+                                    $locale ?? undefined,
                                     {
                                         month: "2-digit",
                                         day: "2-digit",
