@@ -55,3 +55,27 @@ Merged upstream delivery work, enforced dev-only main PRs, added GitHub-built im
 ### Status
 
 [OK] **Completed**
+
+
+## Session 3: Deploy Chinese compact UI to track.cqaiclub.online
+<!-- trellis-session: v=2 fp=e661a792224d1341 -->
+
+**Date**: 2026-10-24
+**Task**: Deploy Chinese compact UI to track.cqaiclub.online
+**Branch**: `dev`
+
+### Summary
+
+Published protected dev-to-main PR31 at 2302b1b6 via successful Actions run40085764879; immutable web/db revisions, health, backup, new ORIGIN, HTTPS and renewal verified. Full CI110 browser and572 unit tests passed. Public read-only language/persistence/mobile diagnostics passed after hydration readiness; original public run6/8 with2 cold-load timeouts, cold hydration5-15s recorded honestly. No production account writes; local temporary test infrastructure cleaned.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `77199dbf` | feat(web): localize and compact UI for track.cqaiclub.online |
+| `76c6bd12` | test(web): align full-suite selectors with localized UI |
+| `2302b1b6` | Merge pull request #31 from g-dxw/dev |
+
+### Status
+
+[OK] **Completed**
