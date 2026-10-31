@@ -8,7 +8,11 @@ The frontend is a SvelteKit 2 application in `web/`, using Svelte 5, TypeScript,
 |---|---|
 | [Directory Structure](./directory-structure.md) | Adding routes, components, models, or stores |
 | [Component Guidelines](./component-guidelines.md) | Building or extending `.svelte` components |
+| [Homepage Scene](./homepage-scene.md) | Changing the public homepage model, animation, loading or cleanup |
+| [Homepage Featured Trails](./homepage-featured.md) | Changing public homepage data, curated content or case cards |
+| [User Center](./user-center.md) | Separating the public homepage from authenticated own-trail management |
 | [Hook Guidelines](./hook-guidelines.md) | Working on SvelteKit hooks or lifecycle logic |
+| [OAuth Callback](./oauth-callback.md) | Changing native-OIDC Web login, callback or response privacy |
 | [State Management](./state-management.md) | Choosing between load data, stores, and URL state |
 | [Type Safety](./type-safety.md) | Adding models, API data, or validation |
 | [Quality Guidelines](./quality-guidelines.md) | Testing or reviewing web changes |

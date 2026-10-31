@@ -10,6 +10,7 @@
     import { show_toast } from "$lib/stores/toast_store.svelte";
     import { login } from "$lib/stores/user_store";
     import { APIError } from "$lib/util/api_util";
+    import { saveOAuthProvider } from "$lib/util/oauth_callback";
     import { validator } from "@felte/validator-zod";
     import { createForm } from "felte";
     import { type AuthProviderInfo } from "pocketbase";
@@ -74,8 +75,17 @@
         },
     });
 
-    function setProvider(provider: AuthProviderInfo) {
-        localStorage.setItem("provider", JSON.stringify(provider));
+    function setProvider(event: MouseEvent, provider: AuthProviderInfo) {
+        try {
+            saveOAuthProvider(sessionStorage, provider);
+        } catch {
+            event.preventDefault();
+            show_toast({
+                icon: "close",
+                type: "error",
+                text: $_("oauth-storage-unavailable"),
+            });
+        }
     }
 </script>
 
@@ -132,7 +142,7 @@
         {/if}
 
         {#if authProviders.length}
-            {#if page.data.authMethods.usernamePassword || page.data.authMethods.emailPassword}
+            {#if pageData.authMethods.password.enabled}
                 <div class="flex gap-4 items-center w-full">
                     <hr class="basis-full border-input-border" />
                     <span class="text-gray-500 uppercase">{$_("or")}</span>
@@ -144,7 +154,7 @@
                     <a
                         href={(provider as any).url}
                         class="btn-secondary inline-flex min-w-full justify-center"
-                        onclick={() => setProvider(provider)}
+                        onclick={(event) => setProvider(event, provider)}
                     >
                         <img
                             class="w-5 aspect-square mr-4"

@@ -15,8 +15,11 @@ for (const mobile of [false, true]) {
         await page.goto("/");
         await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
         expect((await page.locator("[data-app-header]").boundingBox())?.height).toBe(mobile ? 72 : 80);
+        const hero = await page.locator(".hero").boundingBox();
+        const trails = await page.locator("#trails").boundingBox();
         const about = await page.locator("#about").boundingBox();
-        expect(about?.y).toBeLessThan(mobile ? 550 : 680);
+        expect(trails!.y).toBeGreaterThanOrEqual(hero!.y + hero!.height - 1);
+        expect(about!.y).toBeGreaterThan(trails!.y);
         const search = page.locator('input[name="q"]');
         expect((await search.boundingBox())?.height).toBe(mobile ? 52 : 48);
         if (mobile) expect((await page.locator("footer").boundingBox())?.height).toBeLessThan(380);

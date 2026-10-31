@@ -1,7 +1,8 @@
 import { env } from "$env/dynamic/public";
 import { env as private_env } from "$env/dynamic/private";
 
-import { error, json, type RequestEvent } from "@sveltejs/kit";
+import { json, type RequestEvent } from "@sveltejs/kit";
+import { ClientResponseError } from "pocketbase";
 import { z } from "zod";
 import { handleError } from "$lib/util/api_util";
 
@@ -45,9 +46,9 @@ export async function POST(event: RequestEvent) {
     try {
         const data = await event.request.json();
         const safeData = z.object({
-            name: z.string(),
-            code: z.string(),
-            codeVerifier: z.string()
+            name: z.string().min(1),
+            code: z.string().min(1),
+            codeVerifier: z.string().min(1)
         }).parse(data)
 
         const r = await event.locals.pb.collection('users').authWithOAuth2Code(
@@ -56,9 +57,18 @@ export async function POST(event: RequestEvent) {
             safeData.codeVerifier,
             redirectURL,
         )
-        return json(r)
-    } catch (e: any) {
-        return handleError(e);
+        // The session cookie is still exported by hooks.server.ts. Upstream
+        // OAuth metadata may contain IdP tokens and is not part of this API.
+        return json({ token: r.token, record: r.record })
+    } catch (e: unknown) {
+        if (e instanceof z.ZodError || e instanceof SyntaxError) {
+            return json({ message: "invalid_params" }, { status: 400 });
+        }
+        const status = e instanceof ClientResponseError && e.status >= 400 && e.status < 500
+            ? e.status
+            : 502;
+        // Do not relay raw OAuth diagnostics, codes or claims to the browser.
+        return json({ message: "oauth_authentication_failed" }, { status });
     }
 
 }

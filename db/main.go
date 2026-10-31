@@ -294,6 +294,11 @@ func onBeforeServeHandler(client meilisearch.ServiceManager) func(se *core.Serve
 func registerRoutes(se *core.ServeEvent, client meilisearch.ServiceManager) {
 	se.Router.GET("/health", routes.Health)
 
+	se.Router.GET("/homepage/editor", routes.HomepageEditor)
+	se.Router.GET("/homepage/admin/featured", routes.HomepageFeaturedAdminGet)
+	se.Router.PUT("/homepage/admin/featured", routes.HomepageFeaturedAdminPut)
+	se.Router.GET("/homepage/featured", routes.HomepageFeatured)
+
 	se.Router.POST("/auth/token", routes.AuthToken)
 	se.Router.POST("/user/email", routes.UserEmailChange)
 	se.Router.POST("/waypoint/cluster", routes.WaypointCluster)
