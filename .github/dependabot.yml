@@ -3,6 +3,11 @@
 version: 2
 updates:
   - package-ecosystem: gomod
+    # PocketBase minor upgrades need a coordinated Go/runtime review.
+    ignore:
+      - dependency-name: "github.com/pocketbase/pocketbase"
+        update-types:
+          - version-update:semver-minor
     target-branch: "dev"
     open-pull-requests-limit: 1
     allow:
