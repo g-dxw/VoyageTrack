@@ -15,21 +15,21 @@ test("switches immediately, keeps the browser preference across refresh and navi
         }
     });
     await page.goto("/");
-    await expect(page).toHaveTitle("主页 | wanderer");
+    await expect(page).toHaveTitle("主页 | VoyageTrack");
     // The initial title is server-rendered. Wait for the layout's client
     // locale effect before interacting with the native select.
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     const selector = page.getByRole("combobox", { name: "语言", exact: true });
     await expect(selector).toHaveValue("zh");
     await selector.selectOption("en");
-    await expect(page).toHaveTitle("Home | wanderer");
+    await expect(page).toHaveTitle("Home | VoyageTrack");
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
-    await expect(page.getByRole("heading", { name: "About", exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "About", exact: true })).toBeVisible();
     await page.reload();
-    await expect(page).toHaveTitle("Home | wanderer");
+    await expect(page).toHaveTitle("Home | VoyageTrack");
     await expect(page.getByRole("combobox", { name: "Language", exact: true })).toHaveValue("en");
     const renderedEnglish = await context.request.get("/");
-    expect(await renderedEnglish.text()).toContain("<title>Home | wanderer</title>");
+    expect(await renderedEnglish.text()).toContain("<title>Home | VoyageTrack</title>");
     await page.goto("/login");
     await expect(page).toHaveTitle("Login | wanderer");
     // The password type is applied by TextField's client action, unlike the
@@ -58,7 +58,7 @@ test("keeps language selection visible and usable in the mobile header", async (
     expect(bounds?.height).toBeGreaterThanOrEqual(40);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await selector.selectOption("en");
-    await expect(page).toHaveTitle("Home | wanderer");
+    await expect(page).toHaveTitle("Home | VoyageTrack");
     await expect(page.getByRole("button", { name: "Toggle navigation", exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.getByRole("combobox", { name: "Language", exact: true }).selectOption("zh");
@@ -97,5 +97,5 @@ test("serializes a switch while a new language bundle loads", async ({ page, con
     await expect(page.getByRole("combobox", { name: "Langue", exact: true })).toBeEnabled();
     expect((await context.cookies()).find(cookie => cookie.name === "wanderer_locale")?.value).toBe("fr");
     await page.getByRole("combobox", { name: "Langue", exact: true }).selectOption("en");
-    await expect(page).toHaveTitle("Home | wanderer");
+    await expect(page).toHaveTitle("Home | VoyageTrack");
 });

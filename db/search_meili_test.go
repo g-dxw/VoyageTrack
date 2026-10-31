@@ -323,7 +323,7 @@ func TestRealMeiliRepairRecreatesMissingIndex(t *testing.T) {
 	if index.PrimaryKey != "id" {
 		t.Fatalf("primary key = %q; want id", index.PrimaryKey)
 	}
-	stats, err := client.Index("trails").GetStats()
+	stats, err := client.Index("trails").GetStats(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -465,7 +465,7 @@ func TestRealMeiliRepairRestoresSettingsOfIndexRecreatedByLiveWrite(t *testing.T
 	if filterable == nil || !slices.Contains(*filterable, "public") {
 		t.Fatalf("filterable attributes = %v; want the settings applied by the repair", filterable)
 	}
-	stats, err := client.Index("trails").GetStats()
+	stats, err := client.Index("trails").GetStats(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -565,7 +565,7 @@ func TestRealMeiliStartupWaitsForMeilisearch(t *testing.T) {
 		t.Fatalf("rebuilt = %v; want trails rebuilt once Meilisearch answered\n%s", rebuilt, buf)
 	}
 	waitForIdleMeili(t, client)
-	stats, err := client.Index("trails").GetStats()
+	stats, err := client.Index("trails").GetStats(nil)
 	if err != nil {
 		t.Fatal(err)
 	}

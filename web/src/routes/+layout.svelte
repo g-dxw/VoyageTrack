@@ -31,6 +31,8 @@
     }
 
     let { data, children }: Props = $props();
+    const isHomepage = $derived(page.url.pathname === "/");
+    const usePlatformChrome = $derived(isHomepage || page.url.pathname.startsWith("/admin/"));
 
     $effect(() => {
         document.documentElement.lang = $locale === "zh" ? "zh-CN" : ($locale ?? "en");
@@ -230,10 +232,84 @@
     </div>
 {/if}
 
-<NavBar user={data.user}></NavBar>
-<PageLoadingBar class="text-content"></PageLoadingBar>
-<Toast></Toast>
-<UploadDialog></UploadDialog>
-{@render children?.()}
+<div class:homepage-shell={usePlatformChrome}>
+    <NavBar user={data.user} homeVariant={usePlatformChrome} homepageEditorUserID={data.homepageEditorUserID}></NavBar>
+    <PageLoadingBar class="text-content"></PageLoadingBar>
+    <Toast></Toast>
+    <UploadDialog></UploadDialog>
+    {@render children?.()}
+    <Footer homeVariant={usePlatformChrome}></Footer>
+</div>
 
-<Footer></Footer>
+<style>
+    .homepage-shell {
+        /* Tailwind's theme aliases otherwise inherit values already resolved
+           against the global palette. Resolve them again inside this scope. */
+        --color-primary: rgba(var(--primary));
+        --color-primary-hover: rgba(var(--primary-hover));
+        --color-secondary-hover: rgba(var(--secondary-hover));
+        --color-background: rgba(var(--background));
+        --color-background-inverse: rgba(var(--background-inverse));
+        --color-content: rgba(var(--content));
+        --color-content-inverse: rgba(var(--content-inverse));
+        --color-input-background: rgba(var(--input-background));
+        --color-input-background-error: rgba(var(--input-background-error));
+        --color-input-border: rgba(var(--input-border));
+        --color-input-border-focus: rgba(var(--input-border-focus));
+        --color-input-ring: rgba(var(--input-ring));
+        --color-toggle-active: rgba(var(--toggle-active));
+        --color-menu-background: rgba(var(--menu-background));
+        --color-menu-item-background-hover: rgba(var(--menu-item-background-hover));
+        --color-menu-item-background-focus: rgba(var(--menu-item-background-focus));
+        --color-footer-background: rgba(var(--footer-background));
+        --color-separator: rgba(var(--separator));
+        --primary: 0, 0, 0;
+        --primary-hover: 38, 38, 38;
+        --secondary-hover: 245, 245, 245;
+        --secondary-hover-inverse: 23, 23, 23;
+        --background: 255, 255, 255;
+        --background-inverse: 0, 0, 0;
+        --content: 23, 23, 23;
+        --content-inverse: 255, 255, 255;
+        --input-background: 250, 250, 250;
+        --input-border: 212, 212, 212;
+        --input-border-focus: 82, 82, 82;
+        --input-ring: 163, 163, 163;
+        --toggle-active: 38, 38, 38;
+        --menu-background: 255, 255, 255;
+        --menu-item-background-hover: 245, 245, 245;
+        --menu-item-background-focus: 229, 229, 229;
+        --footer-background: 255, 255, 255;
+        --separator: 229, 229, 229;
+        --tooltip-background: rgba(23, 23, 23, 0.9);
+        --tooltip-color: #fff;
+        min-height: 100svh;
+        background: rgb(var(--background));
+        color: rgb(var(--content));
+    }
+    :global(.dark) .homepage-shell {
+        --primary: 255, 255, 255;
+        --primary-hover: 229, 229, 229;
+        --secondary-hover: 38, 38, 38;
+        --secondary-hover-inverse: 245, 245, 245;
+        --background: 0, 0, 0;
+        --background-inverse: 255, 255, 255;
+        --content: 245, 245, 245;
+        --content-inverse: 0, 0, 0;
+        --input-background: 23, 23, 23;
+        --input-border: 64, 64, 64;
+        --input-border-focus: 212, 212, 212;
+        --input-ring: 115, 115, 115;
+        --toggle-active: 212, 212, 212;
+        --menu-background: 23, 23, 23;
+        --menu-item-background-hover: 38, 38, 38;
+        --menu-item-background-focus: 64, 64, 64;
+        --footer-background: 0, 0, 0;
+        --separator: 64, 64, 64;
+        --tooltip-background: rgba(245, 245, 245, 0.95);
+        --tooltip-color: #000;
+    }
+    .homepage-shell :global(.btn-primary:not(.btn-disabled)) {
+        color: rgb(var(--content-inverse));
+    }
+</style>

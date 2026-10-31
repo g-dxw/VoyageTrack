@@ -3,6 +3,7 @@
         text: string;
         value: any;
         icon?: string;
+        href?: string;
         separator?: boolean;
         danger?: boolean;
     };
@@ -145,10 +146,17 @@
                         role="presentation"
                         onclick={(e) => handleItemClick(e, item as { text: string; value: any })}
                     >
-                        {#if item.icon}
-                            <i class="fa fa-{item.icon} mr-3 shrink-0"></i>
+                        {#if item.href}
+                            <a href={item.href} class="flex w-full min-w-0 items-center rounded focus-visible:outline-2 focus-visible:outline-input-border-focus">
+                                {#if item.icon}<i class="fa fa-{item.icon} mr-3 shrink-0" aria-hidden="true"></i>{/if}
+                                <span class="min-w-0 break-words">{item.text}</span>
+                            </a>
+                        {:else}
+                            {#if item.icon}
+                                <i class="fa fa-{item.icon} mr-3 shrink-0"></i>
+                            {/if}
+                            <span class="min-w-0 break-words">{item.text}</span>
                         {/if}
-                        <span class="min-w-0 break-words">{item.text}</span>
                     </li>
                 {/if}
             {/each}

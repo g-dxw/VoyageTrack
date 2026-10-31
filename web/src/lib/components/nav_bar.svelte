@@ -3,6 +3,7 @@
     import { afterNavigate, goto } from "$app/navigation";
     import { page } from "$app/state";
     import LogoText from "$lib/components/logo/logo_text.svelte";
+    import VoyageTrack from "$lib/components/logo/voyage_track.svelte";
     import { theme, toggleTheme } from "$lib/stores/theme_store";
     import { currentUser, logout } from "$lib/stores/user_store";
     import { getFileURL } from "$lib/util/file_util";
@@ -20,9 +21,11 @@
 
     interface Props {
         user: AuthRecord;
+        homeVariant?: boolean;
+        homepageEditorUserID?: string | null;
     }
 
-    let { user }: Props = $props();
+    let { user, homeVariant = false, homepageEditorUserID = null }: Props = $props();
     // `currentUser` is undefined until the client auth store has been
     // initialised. An explicit null means that the user logged out and must
     // not fall back to the (now stale) server-rendered prop.
@@ -30,7 +33,14 @@
         $currentUser === undefined ? user : $currentUser,
     );
 
-    const navBarItems = $derived([
+    const canManageHomepage = $derived(!!navUser && navUser.id === homepageEditorUserID);
+
+    const navBarItems = $derived(homeVariant ? [
+        { text: $_("home"), value: "/" },
+        { text: $_("home-explore-nav"), value: "/trails" },
+        { text: $_("map"), value: "/map" },
+        { text: $_("about"), value: page.url.pathname === "/" ? "#about" : "/#about" },
+    ] : [
         { text: $_("home"), value: "/" },
         { text: $_("trail", { values: { n: 2 } }), value: "/trails" },
         { text: $_("map"), value: "/map" },
@@ -38,9 +48,11 @@
     ]);
 
     const dropdownItems = $derived([
+        { text: $_("user-center"), value: "dashboard", icon: "house-user" },
         { text: $_("profile"), value: "profile", icon: "user" },
         { text: $_("my-trails"), value: "trails", icon: "route" },
 
+        ...(canManageHomepage ? [{ text: $_("featured-admin-title"), value: "featured-admin", icon: "star", href: "/admin/featured" }] : []),
         { text: $_("settings"), value: "settings", icon: "cog" },
         { text: $_("logout"), value: "logout", icon: "right-from-bracket" },
     ]);
@@ -71,6 +83,10 @@
 
     function updateIndicator(routeId: string | null | undefined) {
         if (!browser) return;
+        if (homeVariant) {
+            indicatorScale.set(0);
+            return;
+        }
 
         const navBarLinks = document.getElementById("nav-bar-links");
         let childPosition = -1;
@@ -127,9 +143,11 @@
 
     function handleDropdownClick(item: { text: string; value: any }) {
         if (item.value == "profile") {
-            goto(`/profile/@${$currentUser?.username?.toLowerCase()}`);
-        } else if (item.value == "trails") {
-            goto(`/profile/@${$currentUser?.username?.toLowerCase()}/trails`);
+            if (navUser) goto(`/profile/@${navUser.username.toLowerCase()}`);
+        } else if (item.value == "trails" || item.value == "dashboard") {
+            goto("/dashboard");
+        } else if (item.value == "featured-admin") {
+            goto("/admin/featured");
         } else if (item.value == "logout") {
             handleLogout();
         } else if (item.value == "settings") {
@@ -162,8 +180,22 @@
     </div>
     <div class="flex flex-col px-8 gap-4">
         {#each navBarItems as item}
-            <a class="font-semibold text-xl" href={item.value}>{item.text}</a>
+            <a
+                class={homeVariant ? "font-medium text-base py-2" : "font-semibold text-xl"}
+                href={item.value}
+                onclick={() => { if (homeVariant) drawerOpen = false; }}
+            >{item.text}</a>
         {/each}
+        {#if navUser}
+            <a class="font-semibold text-xl" href="/dashboard" aria-current={page.url.pathname === "/dashboard" ? "page" : undefined}>
+                {$_("user-center")}
+            </a>
+            {#if canManageHomepage}
+                <a class="font-semibold text-xl" href="/admin/featured" onclick={() => { drawerOpen = false; }} aria-current={page.url.pathname === "/admin/featured" ? "page" : undefined}>
+                    {$_("featured-admin-title")}
+                </a>
+            {/if}
+        {/if}
     </div>
     <hr class="my-6 border-input-border" />
     <div class="flex flex-col basis-full">
@@ -208,7 +240,7 @@
             </div>
         {:else}
             <a class="btn-primary btn-large text-center mx-4" href="/login"
-                >{$_("login")}</a
+                >{homeVariant ? $_("home-login-register") : $_("login")}</a
             >
         {/if}
     </div>
@@ -216,6 +248,7 @@
 
 <nav
     data-app-header
+    class:home-nav={homeVariant}
     style="height: var(--app-header-height)"
     class="flex justify-between items-center gap-2 px-4 py-2 sm:px-6 {page.url.pathname === '/'
         ? 'sticky top-0 z-10 bg-background'
@@ -224,20 +257,29 @@
     <a
         href="/"
         class="min-w-0 w-32 sm:w-40 sm:shrink-0 [&>svg]:w-full [&>svg]:h-auto"
+        aria-label={homeVariant ? "VoyageTrack" : undefined}
     >
-        {#if $theme == "light"}
+        {#if homeVariant}
+            <VoyageTrack />
+        {:else if $theme == "light"}
             <LogoText></LogoText>
         {:else}
             <LogoTextLight></LogoTextLight>
         {/if}
     </a>
     <menu id="nav-bar-links" class="hidden lg:flex gap-4 xl:gap-8 relative py-1 px-2">
-        <div
-            class="absolute h-full w-16 bg-menu-item-background-hover rounded-xl top-0 z-0"
-            style="width: {indicatorWidth.current}px; left: {indicatorPosition.current}px; scale: {indicatorScale.current}"
-        ></div>
+        {#if !homeVariant}
+            <div
+                class="absolute h-full w-16 bg-menu-item-background-hover rounded-xl top-0 z-0"
+                style="width: {indicatorWidth.current}px; left: {indicatorPosition.current}px; scale: {indicatorScale.current}"
+            ></div>
+        {/if}
         {#each navBarItems as item}
-            <a class="font-semibold z-10" href={item.value}>{item.text}</a>
+            <a
+                class={homeVariant ? "home-nav-link font-medium z-10" : "font-semibold z-10"}
+                href={item.value}
+                aria-current={homeVariant && item.value === "/" ? "page" : undefined}
+            >{item.text}</a>
         {/each}
     </menu>
     <div class="flex shrink-0 items-center gap-2 lg:gap-4">
@@ -266,6 +308,7 @@
                                 <button
                                     onclick={openDropdown}
                                     class="bg-primary rounded-r-lg text-white min-h-11 sm:min-h-10 hover:bg-primary-hover px-3"
+                                    class:home-primary-split={homeVariant}
                                     aria-label={$_("open-trail-create-menu")}
                                     ><i class="fa fa-caret-down"></i></button
                                 >
@@ -307,7 +350,7 @@
                         : 'moon'}"
                     onclick={() => toggleTheme()}
                 ></button>
-                <a class="btn-primary btn-large" href="/login">{$_("login")}</a>
+                <a class="btn-primary btn-large" href="/login">{homeVariant ? $_("home-login-register") : $_("login")}</a>
             </div>
         {/if}
         <button
@@ -319,3 +362,43 @@
 </nav>
 
 <UrlImportModal bind:this={urlImportModal}></UrlImportModal>
+
+<style>
+    .home-nav {
+        max-width: 80rem;
+        margin-inline: auto;
+        padding-inline: 1rem;
+        font-size: var(--text-sm);
+    }
+    .home-nav :global(.home-primary-split) {
+        color: rgb(var(--content-inverse));
+    }
+    .home-nav-link {
+        display: inline-flex;
+        min-height: 2.5rem;
+        align-items: center;
+        white-space: nowrap;
+        text-underline-offset: 0.4rem;
+    }
+    .home-nav-link:hover,
+    .home-nav-link[aria-current="page"] {
+        text-decoration: underline;
+    }
+    @media (min-width: 40rem) {
+        .home-nav { padding-inline: 2rem; }
+    }
+    @media (min-width: 64rem) {
+        .home-nav {
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr) auto;
+            gap: 1rem;
+        }
+        .home-nav #nav-bar-links {
+            justify-self: center;
+            gap: 1rem;
+            padding-inline: 0;
+        }
+        .home-nav > a { width: 10rem; }
+        .home-nav :global(.btn-large) { font-size: var(--text-sm); }
+    }
+</style>

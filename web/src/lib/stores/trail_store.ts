@@ -1,3 +1,4 @@
+import type { FeaturedTrail } from "$lib/models/featured_trail";
 import type { SummitLog } from "$lib/models/summit_log";
 import type { Tag } from "$lib/models/tag";
 import { MAP_MAX_POLYLINES } from "$lib/config/map";
@@ -36,6 +37,16 @@ export async function trails_index(perPage: number = 21, random: boolean = false
     trails = response.items
     return response.items;
 
+}
+
+export async function trails_featured(
+    f: (url: RequestInfo | URL, config?: RequestInit) => Promise<Response> = fetch,
+): Promise<FeaturedTrail[]> {
+    const response = await f("/api/v1/trail/featured", { method: "GET" });
+    if (!response.ok) {
+        throw new APIError(response.status, "featured_trails_unavailable");
+    }
+    return response.json();
 }
 
 export async function trails_recommend(size: number, f: (url: RequestInfo | URL, config?: RequestInit) => Promise<Response> = fetch) {

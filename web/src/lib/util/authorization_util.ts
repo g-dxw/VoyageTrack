@@ -2,6 +2,8 @@ import { browser } from "$app/environment";
 import { env } from "$env/dynamic/public";
 
 const privateRoutes = [
+  "/admin",
+  "/dashboard",
   "/settings",
   "/trail/edit/new",
   "/lists/edit/new",

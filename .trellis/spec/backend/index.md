@@ -7,6 +7,7 @@ The backend is the Go module in `db/`, built on PocketBase. It owns collection s
 | Guide | Use when |
 |---|---|
 | [Directory Structure](./directory-structure.md) | Adding routes, hooks, utilities, or commands |
+| [Homepage Featured](./homepage-featured.md) | Changing homepage editor authorization or persisted selection |
 | [Database Guidelines](./database-guidelines.md) | Changing collections, migrations, or queries |
 | [Error Handling](./error-handling.md) | Returning request errors or handling background failures |
 | [Logging Guidelines](./logging-guidelines.md) | Adding operational logging |

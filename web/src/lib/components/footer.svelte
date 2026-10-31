@@ -1,8 +1,23 @@
-<script>
+<script lang="ts">
     import LogoTextLightWithVersion from "./logo/logo_text_light_with_version.svelte";
     import { _ } from "svelte-i18n";
+    import VoyageTrack from "./logo/voyage_track.svelte";
+
+    let { homeVariant = false }: { homeVariant?: boolean } = $props();
 </script>
 
+{#if homeVariant}
+    <footer class="home-footer mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-6 sm:px-8">
+        <a href="/" aria-label="VoyageTrack" class="w-40 shrink-0 [&>svg]:w-full [&>svg]:h-auto">
+            <VoyageTrack />
+        </a>
+        <nav aria-label={$_("resources")} class="flex flex-wrap items-center gap-6 text-sm">
+            <a href="/#about">{$_("about")}</a>
+            <a href="https://wanderer.to/run/installation/quick/">{$_("help")}</a>
+            <a href="https://github.com/g-dxw/VoyageTrack">GitHub</a>
+        </nav>
+    </footer>
+{:else}
 <footer
     class="bg-footer-background text-white w-full grid grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 p-5 sm:p-6 mt-6 rounded-t-2xl"
 >
@@ -62,8 +77,17 @@
         </ul>
     </div>
 </footer>
+{/if}
 
 <style>
+    .home-footer {
+        color: rgb(var(--content));
+        border-top: 1px solid rgb(var(--separator));
+    }
+    .home-footer a { min-height: 2.75rem; }
+    .home-footer nav a { text-underline-offset: 0.3rem; }
+    .home-footer nav a:hover { text-decoration: underline; }
+
     footer li:not(:last-child) {
         margin-bottom: 2px;
     }

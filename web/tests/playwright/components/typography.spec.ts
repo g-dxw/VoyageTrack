@@ -8,8 +8,9 @@ async function fontSize(locator: Locator): Promise<number> {
     return locator.evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize));
 }
 
-test.beforeEach(async ({ context }) => {
+test.beforeEach(async ({ context, page }) => {
     await context.addCookies([{ name: "wanderer_locale", value: "zh", url: baseURL }]);
+    await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
 test("uses a compact desktop type scale without shrinking controls or rem geometry", async ({ page }) => {
@@ -17,15 +18,15 @@ test("uses a compact desktop type scale without shrinking controls or rem geomet
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     expect(await fontSize(page.locator("html"))).toBe(16);
     expect(await fontSize(page.locator("body"))).toBe(15);
-    expect(await fontSize(page.locator(".hero h2"))).toBe(56);
-    expect(await fontSize(page.locator("#about h2"))).toBe(40);
+    expect(await fontSize(page.locator(".hero h1"))).toBe(48);
+    expect(await fontSize(page.locator("#home-invitation-heading"))).toBe(28);
     expect(await fontSize(page.locator("#about .prose"))).toBe(15);
-    expect(await fontSize(page.locator("#nav-bar-links a").first())).toBe(15);
+    expect(await fontSize(page.locator("#nav-bar-links a").first())).toBe(14);
     expect(await fontSize(page.locator('input[name="q"]'))).toBe(18);
     const language = page.getByRole("combobox", { name: "语言", exact: true });
     expect(await fontSize(language)).toBe(14);
     expect((await language.boundingBox())?.height).toBe(36);
-    expect((await page.getByRole("link", { name: "登录", exact: true }).boundingBox())?.height).toBe(40);
+    expect((await page.getByRole("link", { name: "登录 / 注册", exact: true }).boundingBox())?.height).toBe(40);
     const field = page.locator('input[name="q"]');
     const fieldBounds = await field.boundingBox();
     const iconBounds = await page.locator(".hero .fa-search").boundingBox();
@@ -46,8 +47,8 @@ test("preserves readable mobile text and inputs with a smaller hero", async ({ p
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     expect(await fontSize(page.locator("html"))).toBe(16);
     expect(await fontSize(page.locator("body"))).toBe(16);
-    expect(await fontSize(page.locator(".hero h2"))).toBe(40);
-    expect(await fontSize(page.locator("#about h2"))).toBe(32);
+    expect(await fontSize(page.locator(".hero h1"))).toBe(32);
+    expect(await fontSize(page.locator("#home-invitation-heading"))).toBe(22);
     expect(await fontSize(page.locator("#about .prose"))).toBe(16);
     const language = page.getByRole("combobox", { name: "语言", exact: true });
     expect(await fontSize(language)).toBeGreaterThanOrEqual(16);
@@ -66,12 +67,13 @@ test("continues to honor browser font enlargement and dark-mode contrast tokens"
     await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
     await page.evaluate(() => { document.documentElement.style.fontSize = "20px"; });
     expect(await fontSize(page.locator("body"))).toBe(18.75);
-    expect(await fontSize(page.locator(".hero h2"))).toBe(70);
+    expect(await fontSize(page.locator(".hero h1"))).toBe(60);
     await page.evaluate(() => { document.documentElement.style.removeProperty("font-size"); });
     await page.getByRole("button", { name: "切换主题", exact: true }).click();
     await expect(page.locator("html")).toHaveClass(/dark/);
     expect(await fontSize(page.locator("body"))).toBe(15);
-    expect(await page.locator(".hero h2").evaluate(element => getComputedStyle(element).color)).toBe("rgb(255, 255, 255)");
+    const headingColor = await page.locator(".hero h1").evaluate(element => getComputedStyle(element).color.match(/[\d.]+/g)?.map(Number) ?? []);
+    expect(headingColor.slice(0, 3)).toEqual([245, 245, 245]);
     await page.getByRole("button", { name: "切换主题", exact: true }).click();
     await expect(page.locator("html")).toHaveClass(/light/);
 });

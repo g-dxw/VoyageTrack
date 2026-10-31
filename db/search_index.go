@@ -248,7 +248,7 @@ func searchIndexStale(app core.App, client meilisearch.ServiceManager, source se
 		return "Meilisearch recreated the index", nil
 	}
 
-	stats, err := client.Index(source.index).GetStats()
+	stats, err := client.Index(source.index).GetStats(nil)
 	if err != nil {
 		return "", err
 	}

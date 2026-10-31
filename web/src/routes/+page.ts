@@ -1,24 +1,24 @@
-import type { Trail } from "$lib/models/trail";
 import { categories_index } from "$lib/stores/category_store";
-import { feed_index } from "$lib/stores/feed_store";
 import { subcategories_index } from "$lib/stores/subcategory_store";
-import { trails_recommend } from "$lib/stores/trail_store";
-import type { Load } from "@sveltejs/kit";
+import { trails_featured } from "$lib/stores/trail_store";
+import type { PageLoad } from "./$types";
 
-export const load: Load = async ({ fetch }) => {
-    try {
-        await categories_index(fetch)
-        await subcategories_index(fetch)
+// The homepage is public for every visitor. Personal data belongs to /dashboard.
+export const load: PageLoad = async ({ fetch }) => {
+    const [categories, subcategories, featured] = await Promise.allSettled([
+        categories_index(fetch),
+        subcategories_index(fetch),
+        trails_featured(fetch),
+    ]);
 
-        const feed = await feed_index(1, 10, fetch);
-
-        const trails: Trail[] = await trails_recommend(4, fetch)
-        return { trails: trails ?? [], feed }
-
-    } catch (e) {
-        if (!(e instanceof Error) || e.message !== "Unauthorized") {
-            console.error(e)
+    for (const result of [categories, subcategories]) {
+        if (result.status === "rejected" && !(result.reason instanceof Error && result.reason.message === "Unauthorized")) {
+            console.error("Could not load homepage supporting data");
         }
     }
-    return { trails: [], feed: { items: [], page: 1, perPage: 1, totalItems: 0, totalPages: 0 } }
+
+    return {
+        featuredTrails: featured.status === "fulfilled" ? featured.value : [],
+        featuredTrailsUnavailable: featured.status === "rejected",
+    };
 };
