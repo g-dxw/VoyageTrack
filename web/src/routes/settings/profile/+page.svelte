@@ -71,7 +71,7 @@
             show_toast({
                 type: "error",
                 icon: "close",
-                text: "Error saving bio",
+                text: $_("error-saving-bio"),
             });
             console.error(e);
         }
@@ -84,11 +84,11 @@
 </svelte:head>
 {#if $currentUser}
     <h2 class="text-2xl font-semibold">{$_("profile")}</h2>
-    <hr class="mt-4 mb-6 border-input-border" />
-    <div class="space-y-6">
-        <div class="flex gap-6 items-center">
+    <hr class="mt-3 mb-4 border-input-border" />
+    <div class="space-y-5">
+        <div class="flex gap-4 items-center">
             <div
-                class="rounded-full w-24 aspect-square overflow-hidden relative group"
+                class="rounded-full w-24 shrink-0 aspect-square overflow-hidden relative group"
             >
                 <img
                     class="object-cover h-full"
@@ -97,7 +97,7 @@
                     alt={$_("avatar")}
                 />
                 <button
-                    aria-label="Open file browser"
+                    aria-label={$_("open-file-browser")}
                     class="absolute top-0 w-24 aspect-square opacity-0 group-hover:opacity-100 flex justify-center items-center bg-black/50 focus:bg-black/60 text-white cursor-pointer transition-opacity"
                     onclick={openFileBrowser}
                 >
@@ -112,13 +112,13 @@
                     onchange={handleAvatarSelection}
                 />
             </div>
-            <div>
+            <div class="min-w-0 break-words">
                 <h4 class="text-xl font-semibold">{$currentUser.username}</h4>
                 <h5 class="font-medium">{$currentUser.email}</h5>
             </div>
         </div>
         <div>
-            <h4 class="text-xl font-medium">Bio</h4>
+            <h4 class="text-xl font-medium">{$_("bio")}</h4>
             <Editor bind:value={bio}></Editor>
             <div class="mt-3">
                 <Button

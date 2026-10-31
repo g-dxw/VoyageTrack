@@ -197,7 +197,7 @@
                     <img
                         class="rounded-full w-8 aspect-square mr-2"
                         src={item.icon}
-                        alt="avatar"
+                        alt={$_("avatar")}
                     />
                 {/snippet}
             </Search>
@@ -222,7 +222,7 @@
                                     : $theme === "light"
                                       ? emptyStateTrailLight
                                       : emptyStateTrailDark}
-                                alt="avatar"
+                                alt={$_("list-avatar")}
                             />
 
                             <h5 class="text-md font-semibold text-left">

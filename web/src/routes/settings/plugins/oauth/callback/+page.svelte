@@ -19,7 +19,7 @@
             return;
         }
         if (!code || !state || !instanceId) {
-            error = "invalid_oauth_callback";
+            error = $_("plugin-oauth-invalid-callback");
             return;
         }
 
@@ -27,7 +27,8 @@
             await plugin_oauth_callback({ instanceId, code, state });
             await goto("/settings/plugins");
         } catch (e) {
-            error = e instanceof Error ? e.message : "oauth_error";
+            console.error(e);
+            error = $_("error-starting-oauth");
         }
     });
 </script>
@@ -38,7 +39,7 @@
 
 <div class="mx-auto max-w-md py-12">
     {#if error}
-        <h3 class="text-xl font-semibold">{$_("error")}</h3>
+        <h3 class="text-xl font-semibold">{$_("plugin-status-error")}</h3>
         <p class="mt-3 text-sm text-gray-500">{error}</p>
         <a class="btn-secondary mt-6 inline-block" href="/settings/plugins">{$_("plugins")}</a>
     {:else}

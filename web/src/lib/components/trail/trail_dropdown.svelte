@@ -923,7 +923,7 @@
             show_toast({
                 type: "error",
                 icon: "close",
-                text: "Error adding trail to list.",
+                text: $_("error-adding-trail-to-list"),
             });
         }
     }
@@ -971,7 +971,7 @@
             <div class="spinner light:spinner-dark"></div>
         {:else if mode == "multi-select"}
             <button
-                aria-label="Open dropdown"
+                aria-label={$_("open-dropdown")}
                 class="btn-primary shrink-0 font-medium!"
                 onclick={openDropdown}
             >
@@ -983,7 +983,7 @@
             </button>
         {:else}
             <button
-                aria-label="Open dropdown"
+                aria-label={$_("open-dropdown")}
                 class="btn-primary rounded-full! h-12 w-12"
                 onclick={openDropdown}
             >

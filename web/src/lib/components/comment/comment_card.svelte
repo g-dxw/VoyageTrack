@@ -57,7 +57,7 @@
         <img
             class="rounded-full w-10 aspect-square"
             src={avatarSrc}
-            alt="avatar"
+            alt={$_("avatar")}
         />
     </a>
     <div>
@@ -79,7 +79,7 @@
             </p>
             {#if mode == "edit"}
                 <button
-                    aria-label="Edit comment"
+                    aria-label={editing ? $_("save") : $_("edit-comment")}
                     type="button"
                     class="btn-icon ml-2"
                     style="font-size: 0.75rem;"
@@ -87,7 +87,7 @@
                     ><i class="fa fa-{editing ? 'check' : 'pen'}"></i></button
                 >
                 <button
-                    aria-label="Delete comment"
+                    aria-label={editing ? $_("cancel") : $_("delete-comment")}
                     type="button"
                     class="btn-icon text-xs"
                     style="font-size: 0.75rem;"

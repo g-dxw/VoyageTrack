@@ -14,21 +14,24 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 - Manual rollback entrypoint: `/usr/local/sbin/voyagetrack-rollback <previous-release-sha>`.
 - Runtime state: `/srv/apps/voyagetrack/{compose.yml,.env,.release,data,backups}`.
 - Required secret configuration: `ORIGIN`, `MEILI_MASTER_KEY`, `POCKETBASE_ENCRYPTION_KEY`, and `POCKETBASE_PROXY_SECRET`.
+- Canonical public origin: `https://track.cqaiclub.online` on `49.234.192.148`; dedicated Nginx site and certificate named `track.cqaiclub.online`.
 
 ## 3. Contracts
 
 - `main` is production-only. Pull requests into `main` must originate from the repository's own `dev` branch. Required checks are `check-source`, `db-test`, `deployment-contracts`, and `test`; branch protection must require a pull request, strict checks, resolved conversations, administrator enforcement, and forbid force pushes and deletion.
 - A push to `main` may deploy only that exact SHA. Manual workflow dispatch must resolve `refs/heads/main`, never an arbitrary ref.
 - The deploy workflow must wait for successful `go.yml` and `web.yaml` push runs for the same `main` SHA before building release images.
-- Go, Node, TinyGo, OpenAPI generation, Docker builds, and image publication run in GitHub Actions. Production must not clone source, compile code, or run `docker build`.
+- Go, Node, TinyGo, OpenAPI generation, Docker builds, and image publication run in GitHub Actions. Production may pull only those prebuilt artifacts through the configured mainland GHCR mirrors, retag them to canonical names, and run Compose; it must not clone source, compile code, or run `docker build`.
 - Production images are `linux/amd64`, immutable by SHA tag, and must carry a revision label equal to the requested release. The server must reject a tag whose label does not match.
 - GHCR images must be anonymously readable. CI must test anonymous manifest access before SSH because the server intentionally has no long-lived registry credential.
+- Third-party runtime images required in production must be mirrored into the same public GHCR packages by Actions, so the production mirrors can fetch them without Docker Hub access.
 - The deployment account uses a dedicated forced-command SSH key. The wrapper accepts only `deploy <40-character-lowercase-git-sha>`; sudo grants only the root-owned deployment entrypoint.
 - `.env`, Compose, release state, data, upload, plugin, Meilisearch, backup, and release paths must not be symlinks or resolve outside their fixed locations. Validated secret values must be passed explicitly to Compose so ambient environment variables cannot override them.
 - Pull all images before stopping writers. Before a migration-capable start, stop writers and create a PocketBase archive plus metadata mapping `previous_release` to `candidate_release`.
 - Automatic rollback restores the prior image and its pre-deploy database archive. It must not restore data while candidate writers may still be running.
 - Manual rollback is limited to the immediately previous release with an exact metadata mapping. If the older release fails health checks, restore both the current release and its database snapshot.
 - Only Nginx exposes the web service at `127.0.0.1:13000`; PocketBase diagnostics remain at `127.0.0.1:18090`; Meilisearch has no host port. Public success requires live-origin verification, not only container health.
+- A hostname switch preserves all runtime secrets/data, backs up the root-only `.env`, and updates only `ORIGIN` for both services. Install only that hostname's HTTP challenge site, issue its separate certificate through existing Certbot, then validate/install/reload its TLS site. Keep unrelated virtual hosts intact and verify the renewal timer plus Nginx reload hook. Never enable TLS before its certificate exists.
 
 ## 4. Validation and error matrix
 
@@ -39,6 +42,7 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 | Workflow dispatch is not from `main` | Fail before image build |
 | SHA/tag format is invalid | Exit with usage/configuration error before mutation |
 | Anonymous GHCR pull fails | Stop before SSH and explain that both packages must be public |
+| Direct GHCR downloads are unavailable or unreliable | Pull the public artifacts through the configured mainland mirrors, retag them canonically, and validate revision labels; do not add server-side builds |
 | Image revision label differs from requested SHA | Reject the candidate before stopping the running release |
 | Required secret is absent or malformed | Fail before pulling/stopping services |
 | Managed path is a symlink or resolves elsewhere | Refuse deployment or restore |
@@ -47,6 +51,7 @@ Use this guide for changes to `.github/workflows/`, `deploy/`, production image 
 | Manual rollback lacks exact backup metadata | Refuse to run the older image against newer data |
 | Nginx configuration or certificate is invalid | Do not reload or enable the TLS site |
 | Host-local health passes but public origin fails | Report production as not publicly online and identify DNS/TLS/proxy as the remaining gate |
+| ACME secondary validation times out despite successful challenge requests in other regions | Verify DNS, Nginx challenge path and host firewall read-only; retry boundedly after confirming reachability, without broadly weakening firewall policy |
 
 ## 5. Good, base, and bad cases
 

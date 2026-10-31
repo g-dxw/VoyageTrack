@@ -98,15 +98,15 @@
     <title>{$_("settings")} | wanderer</title>
 </svelte:head>
 <h2 class="text-2xl font-semibold">{$_("notifications")}</h2>
-<hr class="mt-4 mb-6 border-input-border" />
+<hr class="mt-3 mb-4 border-input-border" />
 
 <div
-    class="grid gap-4"
+    class="grid gap-x-3 gap-y-3 items-center"
     style="grid-template-columns: 1fr min-content min-content;"
 >
     <div></div>
-    <span class="text-sm font-medium">Web</span>
-    <span class="text-sm font-medium">Email</span>
+    <span class="text-sm font-medium">{$_("notification-web")}</span>
+    <span class="text-sm font-medium">{$_("email")}</span>
     {#each notificationItems as item}
         <p>{item.text}</p>
         <div>

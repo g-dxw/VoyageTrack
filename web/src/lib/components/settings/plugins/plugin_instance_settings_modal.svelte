@@ -95,15 +95,15 @@
     const configHints: Record<string, string> = {
         after: "plugin-after-date-hint",
     };
-    const privacySelectItems: SelectItem[] = [
+    const privacySelectItems: SelectItem[] = $derived([
         { text: $_("keep-original"), value: "original" },
         { text: $_("apply-user-settings"), value: "settings" },
-    ];
+    ]);
     const authLabels: Record<string, string> = {
-        email: $_("email"),
-        password: $_("password"),
-        clientId: "Client ID",
-        clientSecret: "Client Secret",
+        email: "email",
+        password: "password",
+        clientId: "client-id",
+        clientSecret: "client-secret",
     };
 
     function initialAuth() {
@@ -346,7 +346,7 @@
     }
 
     function authLabel(field: string): string {
-        return authLabels[field] ?? field;
+        return authLabels[field] ? $_(authLabels[field]) : field;
     }
 
     function authFieldType(field: string): "password" | "text" {

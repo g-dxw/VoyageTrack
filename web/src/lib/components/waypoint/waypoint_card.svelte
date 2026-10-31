@@ -83,7 +83,7 @@
                         style="top: {6 * i}px; right: {6 *
                             i}px; transform: rotate(-{i * 5}deg)"
                         src={img}
-                        alt="waypoint"
+                        alt={$_("waypoints", { values: { n: 1 } })}
                     />
                 {/if}
             {/each}

@@ -21,7 +21,7 @@ test('shows a list card', async ({ listsPage }) => {
     await expect(listsPage.listItems).toHaveCount(listItemCount + 1);
     const createdListItem = listsPage.listItems.filter({ hasText: testListName });
     await expect(createdListItem).toBeVisible();
-    await expect(createdListItem.getByRole('img', { name: 'list avatar' })).toBeVisible();
+    await expect(createdListItem.getByRole('img', { name: 'List cover', exact: true })).toBeVisible();
 });
 
 test('update a list card', async ({ listsPage }) => {
