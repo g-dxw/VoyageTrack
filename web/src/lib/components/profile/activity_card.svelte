@@ -9,7 +9,7 @@
         formatHTMLAsTextPreview,
         formatTimeHHMM,
     } from "$lib/util/format_util";
-    import { _ } from "svelte-i18n";
+    import { _, locale } from "svelte-i18n";
     interface Props {
         activity: TimelineItem;
         actor: Actor;
@@ -35,7 +35,7 @@
             class="rounded-full w-10 aspect-square overflow-hidden"
             src={actor.icon ||
                 `https://api.dicebear.com/7.x/initials/svg?seed=${actor.preferred_username}&backgroundType=gradientLinear`}
-            alt="avatar"
+            alt={$_("avatar")}
         />
         <div>
             <span class="font-semibold">{actor.preferred_username}</span>
@@ -43,7 +43,7 @@
                 ? $_("planned-a-trail")
                 : $_("completed-a-trail")}
             <p class="text-xs text-gray-500 mb-3">
-                {new Date(activity.created).toLocaleDateString(undefined, {
+                {new Date(activity.created).toLocaleDateString($locale ?? undefined, {
                     month: "long",
                     day: "2-digit",
                     year: "numeric",

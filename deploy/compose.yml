@@ -12,7 +12,8 @@ x-common-logging: &common-logging
 
 services:
   search:
-    image: getmeili/meilisearch:v1.36.0
+    image: ghcr.io/g-dxw/voyagetrack-db:meilisearch-v1.36.0
+    pull_policy: never
     restart: unless-stopped
     environment:
       <<: *common-environment
@@ -32,6 +33,7 @@ services:
 
   db:
     image: ghcr.io/g-dxw/voyagetrack-db:${IMAGE_TAG:?set IMAGE_TAG}
+    pull_policy: never
     restart: unless-stopped
     depends_on:
       search:
@@ -59,6 +61,7 @@ services:
 
   web:
     image: ghcr.io/g-dxw/voyagetrack-web:${IMAGE_TAG:?set IMAGE_TAG}
+    pull_policy: never
     restart: unless-stopped
     depends_on:
       search:

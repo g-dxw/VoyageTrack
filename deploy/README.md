@@ -1,7 +1,12 @@
 # VoyageTrack production deployment
 
-Production runs prebuilt `linux/amd64` images from GHCR. The server never
-checks out source code and never runs Go, Node, TinyGo, or `docker build`.
+Production runs prebuilt `linux/amd64` images from GHCR. The server pulls those
+published artifacts through the configured mainland GHCR mirrors, retags them
+to their canonical names, and validates the application image revision labels.
+It never checks out source code and never runs Go, Node, TinyGo, or `docker build`.
+GitHub Actions also mirrors the pinned Meilisearch runtime into the already
+public database package as `voyagetrack-db:meilisearch-v1.36.0`, so production
+does not depend on direct Docker Hub access.
 Merging the repository's `dev` branch into `main` starts
 `.github/workflows/deploy-production.yml`, which publishes immutable
 `sha-<40-character-git-sha>` images and calls the restricted deploy command.
@@ -59,7 +64,7 @@ meili_key=$(openssl rand -hex 32)
 pocketbase_key=$(openssl rand -hex 16)
 proxy_secret=$(openssl rand -hex 32)
 {
-  printf "ORIGIN=https://gdxw.dpdns.org\n"
+  printf "ORIGIN=https://track.cqaiclub.online\n"
   printf "MEILI_MASTER_KEY=%s\n" "$meili_key"
   printf "POCKETBASE_ENCRYPTION_KEY=%s\n" "$pocketbase_key"
   printf "POCKETBASE_PROXY_SECRET=%s\n" "$proxy_secret"
@@ -107,8 +112,8 @@ restrict,command="/usr/local/sbin/voyagetrack-deploy-key" ssh-ed25519 <PUBLIC_KE
 ```
 
 The forced-command wrapper rejects everything except
-`deploy <40-character-lowercase-git-sha>`. The sudo rule grants access only to
-the root-owned deployment program, which independently validates its argument.
+`deploy <40-character-lowercase-git-sha>`. The root-owned deployment program
+independently validates the full release SHA.
 
 Configure these GitHub Actions secrets:
 
@@ -121,13 +126,38 @@ Configure these GitHub Actions secrets:
 Do not generate `DEPLOY_KNOWN_HOSTS` inside the workflow. Verify the host key
 through an existing trusted administrative connection before storing it.
 
-Both GHCR packages must be publicly readable. New GHCR packages may initially
+Both GHCR packages and the mirrored Meilisearch tag must be publicly readable. New GHCR packages may initially
 be private even when their source repository is public. The deployment job
 performs an anonymous manifest check before opening SSH; if the first publish
 stops there, change both package visibilities to public and rerun the workflow.
-The server intentionally has no long-lived GitHub package credential.
+The server intentionally has no long-lived GitHub package credential. It pulls
+public images through `ghcr.1ms.run`, with `ghcr.nju.edu.cn` as a fallback,
+then validates the project image revision labels before any service is stopped.
 
 ## Nginx and TLS
+
+The canonical production origin is `https://track.cqaiclub.online`, resolving
+to `49.234.192.148`. The older `gdxw.dpdns.org` templates remain available for
+legacy installations; do not replace another site's virtual host.
+
+For this hostname, first install
+`nginx/track.cqaiclub.online-http-bootstrap.conf` as its own enabled Nginx
+site, run `nginx -t` and reload. Obtain its certificate using the existing
+Certbot installation and HTTP challenge webroot `/var/www/html`:
+
+```bash
+sudo certbot certonly --webroot -w /var/www/html \
+  -d track.cqaiclub.online --cert-name track.cqaiclub.online \
+  --non-interactive --agree-tos
+```
+
+Reuse the existing registered ACME account. Only after the certificate exists,
+install `nginx/track.cqaiclub.online.conf`, validate and reload Nginx. Ensure
+the existing renewal timer also reloads Nginx after successful renewal.
+Before switching an existing instance, retain a root-only backup of `.env`,
+update only `ORIGIN` (not encryption/proxy/search keys), and recreate both web
+and database through the immutable-image deployment pipeline. Never copy a
+local database or run an application build on production.
 
 Only the web service is published through Nginx at `127.0.0.1:13000`.
 PocketBase diagnostics stay on `127.0.0.1:18090`; Meilisearch has no host port.
@@ -148,8 +178,9 @@ An administrator can deploy any immutable commit that has already been built:
 sudo /usr/local/sbin/voyagetrack-deploy <FULL_GIT_SHA>
 ```
 
-The script validates configuration, pulls all images before stopping the
-application, stops writers, archives PocketBase data, starts the candidate,
+The script validates configuration, pulls prebuilt images through the mirrors,
+and validates image provenance before stopping the application. It then stops
+writers, archives PocketBase data, starts the candidate,
 checks both image revision labels and both loopback endpoints. On failure it
 restores the previous image tag and PocketBase backup automatically.
 

@@ -119,12 +119,12 @@
         </div>
     {/if}
     {#if dropdownItems.length}
-        <div class="absolute bottom-8 right-8">
+        <div class="absolute bottom-4 right-4">
             <Dropdown items={dropdownItems} {onchange}
                 >{#snippet children({ toggleMenu: openDropdown })}
                     <button
-                        aria-label="Open dropdown"
-                        class="rounded-full bg-white text-black hover:bg-gray-200 focus:ring-4 ring-gray-100/50 transition-colors h-12 w-12"
+                        aria-label={$_("open-dropdown")}
+                        class="rounded-full bg-white text-black hover:bg-gray-200 focus:ring-4 ring-gray-100/50 transition-colors h-11 w-11 sm:h-9 sm:w-9"
                         onclick={openDropdown}
                     >
                         <i class="fa fa-ellipsis-vertical"></i>
@@ -134,18 +134,18 @@
         </div>
     {/if}
     <img
-        class="w-full object-cover max-h-64"
+        class="w-full object-cover max-h-48"
         src={list.avatar
             ? getFileURL(list, list.avatar, "600x0")
             : $theme === "light"
               ? emptyStateTrailLight
               : emptyStateTrailDark}
-        alt="avatar"
+        alt={$_("list-avatar")}
     />
 </div>
 
-<div class="p-4 md:p-6">
-    <h4 class="text-2xl font-semibold mb-4">{list.name}</h4>
+<div class="p-4 md:p-5">
+    <h4 class="text-2xl font-semibold mb-3">{list.name}</h4>
     {#if list.expand?.author}
         <p class="my-3 text-gray-500 text-sm">
             {$_("by")}
@@ -153,7 +153,7 @@
                 class="rounded-full w-8 aspect-square mx-1 inline"
                 src={list.expand.author.icon ||
                     `https://api.dicebear.com/7.x/initials/svg?seed=${list.expand.author.preferred_username}&backgroundType=gradientLinear`}
-                alt="avatar"
+                alt={$_("avatar")}
             />
             <a class="underline" href="/profile/{handleFromRecordWithIRI(list)}"
                 >{handleFromRecordWithIRI(list)}</a
@@ -162,7 +162,7 @@
     {/if}
     <hr />
     <div
-        class="grid grid-cols-2 my-4 gap-4 font-semibold whitespace-nowrap flex-wrap justify-around"
+        class="grid grid-cols-2 my-3 gap-x-4 gap-y-2 font-semibold whitespace-nowrap flex-wrap justify-around"
     >
         <span
             ><i class="fa fa-left-right mr-2"></i>{formatDistance(

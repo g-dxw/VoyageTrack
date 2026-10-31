@@ -13,7 +13,7 @@
         <h4 class="text-xl font-semibold">{$_("email-verified")}</h4>
         <div class="space-y-6 w-80">
             <p class="text-center">
-                Thank you, your email was verified. Enjoy using wanderer!
+                {$_("email-verification-thanks")}
             </p>
         </div>
         <a class="btn-primary mt-4" href="/">{$_("home")}</a>

@@ -16,7 +16,7 @@
         style="width: {width}px"
         class="rounded-full aspect-square"
         src={$theme === "light" ? emptyStateDescriptionLight : emptyStateDescriptionDark}
-        alt="Empty State showing a wanderer going into the distance"
+        alt={$_("empty-state-illustration")}
     />
 
     <h3 class="text-xl font-medium text-center text-gray-500">{$_("no-description-for-now")}...</h3>

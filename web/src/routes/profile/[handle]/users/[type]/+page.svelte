@@ -65,9 +65,10 @@
                 return;
             }
             if (e instanceof APIError) {
+                console.error(e);
                 show_toast({
                     icon: "close",
-                    text: `${e.status}: ${e.message}`,
+                    text: `${e.status}: ${$_("error-loading-users")}`,
                     type: "error",
                 });
             }
@@ -93,7 +94,7 @@
                         class="rounded-full w-10 aspect-square overflow-hidden"
                         src={follow.icon ||
                             `https://api.dicebear.com/7.x/initials/svg?seed=${follow.preferred_username}&backgroundType=gradientLinear`}
-                        alt="avatar"
+                        alt={$_("avatar")}
                     />
                     <div>
                         <p class="text-lg font-medium">

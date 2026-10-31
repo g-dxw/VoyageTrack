@@ -16,6 +16,9 @@ env:
   REGISTRY: ghcr.io
   DB_IMAGE: ghcr.io/g-dxw/voyagetrack-db
   WEB_IMAGE: ghcr.io/g-dxw/voyagetrack-web
+  SEARCH_IMAGE: ghcr.io/g-dxw/voyagetrack-db
+  SEARCH_TAG: meilisearch-v1.36.0
+  UPSTREAM_SEARCH_IMAGE: getmeili/meilisearch:v1.36.0
 
 jobs:
   prepare:
@@ -172,6 +175,19 @@ jobs:
             echo "web_exists=false" >> "$GITHUB_OUTPUT"
           fi
 
+          if docker buildx imagetools inspect "$SEARCH_IMAGE:$SEARCH_TAG" >/dev/null 2>&1; then
+            echo "search_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "search_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Mirror the pinned Meilisearch image into GHCR
+        if: steps.image-state.outputs.search_exists != 'true'
+        run: |
+          docker pull --platform linux/amd64 "$UPSTREAM_SEARCH_IMAGE"
+          docker tag "$UPSTREAM_SEARCH_IMAGE" "$SEARCH_IMAGE:$SEARCH_TAG"
+          docker push "$SEARCH_IMAGE:$SEARCH_TAG"
+
       - name: Build and publish the database image
         id: db-image
         if: steps.image-state.outputs.db_exists != 'true'
@@ -212,27 +228,36 @@ jobs:
           IMAGE_TAG: ${{ needs.prepare.outputs.image-tag }}
         run: |
           set -euo pipefail
+          search_digest="sha256:$(docker buildx imagetools inspect --raw "$SEARCH_IMAGE:$SEARCH_TAG" | sha256sum | awk '{print $1}')"
           db_digest="sha256:$(docker buildx imagetools inspect --raw "$DB_IMAGE:$IMAGE_TAG" | sha256sum | awk '{print $1}')"
           web_digest="sha256:$(docker buildx imagetools inspect --raw "$WEB_IMAGE:$IMAGE_TAG" | sha256sum | awk '{print $1}')"
-          echo "db=$db_digest" >> "$GITHUB_OUTPUT"
-          echo "web=$web_digest" >> "$GITHUB_OUTPUT"
+          {
+            echo "search=$search_digest"
+            echo "db=$db_digest"
+            echo "web=$web_digest"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Write release manifest
         env:
           RELEASE_SHA: ${{ needs.prepare.outputs.release-sha }}
           IMAGE_TAG: ${{ needs.prepare.outputs.image-tag }}
+          SEARCH_DIGEST: ${{ steps.image-digests.outputs.search }}
           DB_DIGEST: ${{ steps.image-digests.outputs.db }}
           WEB_DIGEST: ${{ steps.image-digests.outputs.web }}
         run: |
           jq -n \
             --arg release_sha "$RELEASE_SHA" \
             --arg image_tag "$IMAGE_TAG" \
+            --arg search_image "$SEARCH_IMAGE" \
+            --arg search_tag "$SEARCH_TAG" \
+            --arg search_digest "$SEARCH_DIGEST" \
             --arg db_image "$DB_IMAGE" \
             --arg db_digest "$DB_DIGEST" \
             --arg web_image "$WEB_IMAGE" \
             --arg web_digest "$WEB_DIGEST" \
             '{release_sha: $release_sha, image_tag: $image_tag,
               images: {
+                search: {name: $search_image, tag: $search_tag, digest: $search_digest},
                 db: {name: $db_image, digest: $db_digest},
                 web: {name: $web_image, digest: $web_digest}
               }}' > release-manifest.json
@@ -249,7 +274,7 @@ jobs:
     name: deploy-production
     needs: [prepare, build-images]
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     environment: production
     steps:
       - name: Require anonymous pulls for production images
@@ -266,6 +291,10 @@ jobs:
           }
           DOCKER_CONFIG="$anonymous_docker_config" docker manifest inspect "$WEB_IMAGE:$IMAGE_TAG" >/dev/null || {
             echo "::error::$WEB_IMAGE:$IMAGE_TAG is not anonymously readable. Make the GHCR package public, then rerun this workflow."
+            exit 1
+          }
+          DOCKER_CONFIG="$anonymous_docker_config" docker manifest inspect "$SEARCH_IMAGE:$SEARCH_TAG" >/dev/null || {
+            echo "::error::$SEARCH_IMAGE:$SEARCH_TAG is not anonymously readable. The mirrored Meilisearch tag must share the public database package."
             exit 1
           }
 
@@ -303,6 +332,8 @@ jobs:
           ssh \
             -o BatchMode=yes \
             -o IdentitiesOnly=yes \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=60 \
             -o StrictHostKeyChecking=yes \
             -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
             -i "$HOME/.ssh/voyagetrack_deploy" \

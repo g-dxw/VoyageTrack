@@ -223,7 +223,7 @@
 </svelte:head>
 
 <main
-    class={`grid grid-cols-1 md:grid-cols-[300px_1fr] items-start gap-8 mx-6 ${trailsFullWidth ? "md:mx-6 max-w-full" : "md:mx-auto max-w-7xl"}`}
+    class={`grid grid-cols-1 md:grid-cols-[260px_1fr] items-start gap-4 mx-4 ${trailsFullWidth ? "md:mx-4 max-w-full" : "md:mx-auto max-w-7xl"}`}
 >
     <TrailFilterPanel
         categories={page.data.categories}

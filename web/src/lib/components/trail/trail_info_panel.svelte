@@ -194,7 +194,7 @@
             show_toast({
                 type: "error",
                 icon: "close",
-                text: "Error loading comments.",
+                text: $_("error-loading-comments"),
             });
         } finally {
             commentsLoading = false;
@@ -272,7 +272,7 @@
             show_toast({
                 type: "error",
                 icon: "close",
-                text: "Error loading summit logs.",
+                text: $_("error-loading-summit-logs"),
             });
         } finally {
             summitLogsLoading = false;
@@ -494,8 +494,8 @@
         <section class="relative">
             {#if mode !== "list"}
                 <button
-                    aria-label="Back"
-                    class="bg-black/40 text-white text-lg rounded-full w-10 h-10 hover:bg-black/50 transition-colors focus:ring-4 focus:ring-primary/70 top-6 left-6 absolute"
+                    aria-label={$_("back")}
+                    class="bg-black/40 text-white text-lg rounded-full w-11 h-11 sm:w-10 sm:h-10 hover:bg-black/50 transition-colors focus:ring-4 focus:ring-primary/70 top-4 left-4 absolute"
                     onclick={() => history.back()}
                 >
                     <i class="fa fa-arrow-left"></i>
@@ -504,7 +504,7 @@
             <div
                 class="grid gap-px {headerPhotos.length > 1
                     ? 'grid-cols-[8fr_5fr]'
-                    : 'grid-cols-1'} h-80 rounded-t-3xl overflow-hidden cursor-pointer"
+                    : 'grid-cols-1'} h-48 sm:h-56 lg:h-64 rounded-t-3xl overflow-hidden cursor-pointer"
             >
                 <PhotoGallery
                     photos={trail.photos.map((p) => getFileURL(trail, p))}
@@ -537,7 +537,7 @@
                 {/each}
             </div>
         </section>
-        <section class="border-b border-input-border p-8">
+        <section class="border-b border-input-border p-4 sm:p-5">
             <div class="flex justify-between items-center gap-x-4">
                 {#if editingTags}
                     <div class="flex-1">
@@ -675,7 +675,7 @@
                     {#if trail.date}
                         <h5 class="text-sm text-gray-500">
                             {new Date(trail.date).toLocaleDateString(
-                                undefined,
+                                $locale ?? undefined,
                                 {
                                     month: "long",
                                     day: "2-digit",
@@ -692,14 +692,14 @@
                                 class="rounded-full w-8 aspect-square mx-1 inline"
                                 src={trail.expand.author.icon ||
                                     `https://api.dicebear.com/7.x/initials/svg?seed=${trail.expand.author.preferred_username}&backgroundType=gradientLinear`}
-                                alt="avatar"
+                                alt={$_("avatar")}
                             />
                             <a class="underline" href="/profile/{handle}"
                                 >{handleFromRecordWithIRI(trail)}</a
                             >
                         </p>
                     {/if}
-                    <div class="flex flex-wrap gap-x-8 gap-y-2 mt-2 mr-8">
+                    <div class="flex flex-wrap gap-x-4 gap-y-2 mt-2 mr-4">
                         {#if trail.location}
                             <h3 class="text-lg">
                                 <i class="fa fa-location-dot mr-2"></i>
@@ -737,7 +737,7 @@
             </div>
         </section>
         <section
-            class="grid grid-cols-2 sm:grid-cols-5 gap-y-4 py-4 border-b border-input-border px-3"
+            class="grid grid-cols-2 sm:grid-cols-5 gap-y-3 py-3 border-b border-input-border px-3"
         >
             <div class="flex flex-col items-center">
                 <span class="font-medium text-center"
@@ -803,9 +803,9 @@
             {/if}
         </section>
     </div>
-    <section class="trail-info-panel-content px-8">
+    <section class="trail-info-panel-content px-4 sm:px-5">
         <div
-            class="grid grid-cols-1 my-4 gap-8"
+            class="grid grid-cols-1 my-4 gap-5"
             class:xl:grid-cols-[1fr_18rem]={mode == "overview"}
         >
             <div class="order-1 xl:-order-1">
@@ -870,7 +870,7 @@
                 {:else}
                     <EmptyStateDescription></EmptyStateDescription>
                 {/if}
-                <h4 class="text-2xl font-semibold mb-6 mt-12">
+                <h4 class="text-2xl font-semibold mb-4 mt-6">
                     {$_("route", { values: { n: 1 } })}
                 </h4>
                 {#if mode === "overview"}
@@ -885,7 +885,7 @@
                     onmouseleave={closeMarkerPopup}
                 ></TrailTimeline>
 
-                <div class="mb-6 mt-12 flex justify-between flex-wrap gap-y-4">
+                <div class="mb-4 mt-6 flex justify-between flex-wrap gap-y-3">
                     <Tabs {tabs} bind:activeTab></Tabs>
                     {#if $currentUser && activeTab == 0 && mode != "list"}
                         <Button
@@ -970,13 +970,13 @@
                                         "100x100",
                                     ) ||
                                         `https://api.dicebear.com/7.x/initials/svg?seed=${$currentUser.username?.toLowerCase()}&backgroundType=gradientLinear`}
-                                    alt="avatar"
+                                    alt={$_("avatar")}
                                 />
                                 <div class="basis-full">
                                     <Editor
                                         bind:value={newComment.text}
                                         extraClasses="min-h-24 max-w-full"
-                                        placeholder="Add comment..."
+                                        placeholder={$_("add-comment-placeholder")}
                                     ></Editor>
                                 </div>
                             </div>
@@ -987,7 +987,7 @@
                                     secondary={true}
                                     disabled={commentCreateLoading ||
                                         newComment.text.length == 0}
-                                    >Comment</Button
+                                    >{$_("post-comment")}</Button
                                 >
                             </div>
                         {/if}

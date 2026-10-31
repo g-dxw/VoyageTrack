@@ -28,17 +28,17 @@
 </script>
 
 <div
-    class="flex items-start gap-6 p-4 hover:bg-menu-item-background-hover rounded-xl transition-colors cursor-pointer"
+    class="flex items-start gap-3 p-3 hover:bg-menu-item-background-hover rounded-xl transition-colors cursor-pointer"
     class:bg-menu-item-background-hover={active}
 >
     <img
-        class="w-16 md:w-20 aspect-square rounded-full object-cover"
+        class="w-12 md:w-16 shrink-0 aspect-square rounded-full object-cover"
         src={list.avatar
             ? getFileURL(list, list.avatar, "300x300")
             : $theme === "light"
               ? emptyStateTrailLight
               : emptyStateTrailDark}
-        alt="list avatar"
+        alt={$_("list-avatar")}
     />
 
     <div class="self-start min-w-0 basis-full transition-transform">
@@ -67,7 +67,7 @@
                     class="rounded-full w-5 aspect-square mx-1 inline"
                     src={list.expand.author.icon ||
                         `https://api.dicebear.com/7.x/initials/svg?seed=${list.expand.author.preferred_username}&backgroundType=gradientLinear`}
-                    alt="author avatar"
+                    alt={$_("avatar")}
                 />
                 {handleFromRecordWithIRI(list)}
             </p>

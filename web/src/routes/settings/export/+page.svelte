@@ -135,41 +135,45 @@
 </svelte:head>
 
 <div class="space-y-6">
-    <h3 class="text-2xl font-semibold">{$_("import")}</h3>
-    <hr class="mt-4 mb-6 border-input-border" />
-    <button
-        class="drop-area relative h-64 w-full p-4 border border-content border-dashed rounded-xl flex items-center justify-center text-gray-500 bg-background cursor-pointer hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus transition-colors"
-        class:border-2={offerUpload}
-        onclick={openFileBrowser}
-        ondragover={handleDragOver}
-        ondragleave={handleDragLeave}
-        ondrop={handleDrop}
-    >
-        <div class="">
-            <img
-                class="rounded-full aspect-square mx-auto"
-                src={$theme === "light"
-                    ? emptyStateUploadLight
-                    : emptyStateUploadDark}
-                alt="Empty State showing a wanderer going into the distance"
-            />
-            {$_("import-hint")}
-        </div>
-    </button>
+    <section>
+        <h3 class="text-2xl font-semibold">{$_("import")}</h3>
+        <hr class="mt-3 mb-4 border-input-border" />
+        <button
+            class="drop-area relative min-h-40 w-full p-4 border border-content border-dashed rounded-xl flex items-center justify-center text-gray-500 bg-background cursor-pointer hover:bg-menu-item-background-hover focus-visible:bg-menu-item-background-focus focus-visible:outline-2 focus-visible:outline-input-border-focus transition-colors"
+            class:border-2={offerUpload}
+            onclick={openFileBrowser}
+            ondragover={handleDragOver}
+            ondragleave={handleDragLeave}
+            ondrop={handleDrop}
+        >
+            <div class="text-center">
+                <img
+                    class="rounded-full h-20 w-20 mx-auto mb-2"
+                    src={$theme === "light"
+                        ? emptyStateUploadLight
+                        : emptyStateUploadDark}
+                    alt={$_("import-illustration")}
+                />
+                {$_("import-hint")}
+            </div>
+        </button>
 
-    <input
-        type="file"
-        id="file-input"
-        accept=".gpx,.GPX,.tcx,.TCX,.kml,.KML,.fit,.FIT"
-        multiple={true}
-        style="display: none;"
-        onchange={() => handleFileSelection()}
-    />
-    <h3 class="text-2xl font-semibold">{$_("export")}</h3>
-    <hr class="mt-4 mb-6 border-input-border" />
-    <Button secondary={true} onclick={() => exportModal.openModal()}
-        >{$_("export-all-trails")}</Button
-    >
+        <input
+            type="file"
+            id="file-input"
+            accept=".gpx,.GPX,.tcx,.TCX,.kml,.KML,.fit,.FIT"
+            multiple={true}
+            style="display: none;"
+            onchange={() => handleFileSelection()}
+        />
+    </section>
+    <section>
+        <h3 class="text-2xl font-semibold">{$_("export")}</h3>
+        <hr class="mt-3 mb-4 border-input-border" />
+        <Button secondary={true} onclick={() => exportModal.openModal()}
+            >{$_("export-all-trails")}</Button
+        >
+    </section>
 </div>
 
 <TrailExportModal bind:this={exportModal} onexport={exportTrails}

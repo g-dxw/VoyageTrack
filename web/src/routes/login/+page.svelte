@@ -84,17 +84,19 @@
 </svelte:head>
 <main class="flex justify-center">
     <form
-        class="login-panel max-w-md border border-input-border rounded-xl p-8 flex flex-col justify-center items-center gap-4 w-[28rem] mt-8"
+        class="login-panel w-full max-w-sm mx-4 border border-input-border rounded-xl p-5 sm:p-6 flex flex-col justify-center items-center gap-4 mt-4 mb-6"
         use:form
     >
-        {#if $theme == "light"}
-            <LogoTextTwoLineDark></LogoTextTwoLineDark>
-        {:else}
-            <LogoTextTwoLineLight></LogoTextTwoLineLight>
-        {/if}
+        <div class="w-24 [&>svg]:w-full [&>svg]:h-auto">
+            {#if $theme == "light"}
+                <LogoTextTwoLineDark></LogoTextTwoLineDark>
+            {:else}
+                <LogoTextTwoLineLight></LogoTextTwoLineLight>
+            {/if}
+        </div>
         <h4 class="text-xl font-semibold">{$_("slogan")}</h4>
         {#if page.data.authMethods.password.enabled}
-            <div class="space-y-6 w-80">
+            <div class="space-y-4 w-full">
                 <TextField
                     name="username"
                     label="{$_('username')}/{$_('email')}"
@@ -116,7 +118,7 @@
                     primary={true}
                     extraClasses={"min-w-full"}
                     type="submit"
-                    {loading}>Login</Button
+                    {loading}>{$_("login")}</Button
                 >
             </div>
             {#if env.PUBLIC_DISABLE_SIGNUP !== "true"}
@@ -137,7 +139,7 @@
                     <hr class="basis-full border-input-border" />
                 </div>
             {/if}
-            <div class="w-80 space-y-4">
+            <div class="w-full space-y-3">
                 {#each authProviders as provider}
                     <a
                         href={(provider as any).url}
@@ -147,9 +149,9 @@
                         <img
                             class="w-5 aspect-square mr-4"
                             src={(provider as any).img}
-                            alt="Provider logo"
+                            alt={$_("provider-logo", { values: { provider: provider.displayName } })}
                         />
-                        Login with {provider.displayName}
+                        {$_("login-with-provider", { values: { provider: provider.displayName } })}
                     </a>
                 {/each}
             </div>

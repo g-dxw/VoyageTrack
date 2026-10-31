@@ -208,7 +208,7 @@
         aria-label={ariaLabel || label || name}
         aria-haspopup="listbox"
         aria-expanded={open}
-        class="relative flex h-10 w-full items-center rounded-md border border-input-border bg-input-background px-3 text-left transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0"
+        class="relative flex min-h-11 sm:min-h-9 w-full items-center rounded-md border border-input-border bg-input-background px-3 pr-8 py-1.5 leading-5 text-left transition-colors focus:border-input-border-focus focus:outline-none focus:ring-0"
         class:opacity-75={disabled}
         class:cursor-default={disabled}
         disabled={disabled}
@@ -216,9 +216,9 @@
         onkeydown={handleKeydown}
     >
         {#if selectedItem}
-            <span class="truncate">{selectedItem.text}</span>
+            <span class="min-w-0 break-words">{selectedItem.text}</span>
         {:else}
-            <span class="truncate text-gray-400">{placeholder}</span>
+            <span class="min-w-0 break-words text-gray-400">{placeholder}</span>
         {/if}
         <i
             class="fa fa-caret-down absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition-transform"
@@ -238,7 +238,7 @@
                     role="option"
                     aria-selected={item.value === value}
                     tabindex="-1"
-                    class="flex cursor-pointer items-center justify-between px-3 py-2 hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus"
+                    class="flex min-h-11 sm:min-h-9 cursor-pointer items-center justify-between px-3 py-1.5 hover:bg-menu-item-background-hover focus:bg-menu-item-background-focus"
                     class:bg-menu-item-background-focus={activeIndex === i}
                     data-single-select-index={i}
                     onmousedown={(event) => {
@@ -246,7 +246,7 @@
                         selectItem(item);
                     }}
                 >
-                    <span class="truncate">{item.text}</span>
+                    <span class="min-w-0 break-words">{item.text}</span>
                     {#if item.value === value}
                         <i class="fa fa-check ml-3"></i>
                     {/if}

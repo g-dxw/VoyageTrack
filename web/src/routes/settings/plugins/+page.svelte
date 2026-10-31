@@ -498,11 +498,11 @@
 </svelte:head>
 
 <h3 class="text-2xl font-semibold">{$_("plugins")}</h3>
-<hr class="mt-4 mb-6 border-input-border" />
+<hr class="mt-3 mb-4 border-input-border" />
 
 {#if pluginGroups.length === 0}
     <div
-        class="rounded-xl border border-dashed border-input-border bg-input-background px-6 py-10 text-center"
+        class="rounded-xl border border-dashed border-input-border bg-input-background px-4 py-6 text-center"
     >
         <div
             class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full border border-input-border text-xl text-gray-500"
@@ -515,7 +515,7 @@
             {$_("plugins-empty-description")}
         </p>
         <a
-            class="btn-secondary mt-6 inline-flex items-center justify-center gap-2"
+            class="btn-secondary mt-4 inline-flex items-center justify-center gap-2"
             href="https://wanderer.to/run/installation/plugins"
             target="_blank"
             rel="noreferrer"
@@ -525,10 +525,10 @@
         </a>
     </div>
 {:else}
-    <div class="space-y-8">
+    <div class="space-y-6">
         {#each pluginGroups as group (group.type)}
         <section>
-            <div class="mb-4 space-y-2">
+            <div class="mb-3 space-y-2">
                 <h4 class="text-xl font-medium">{pluginTypeTitle(group.type)}</h4>
                 <p class="text-sm text-gray-500 max-w-3xl">
                     {pluginTypeDescription(group.type)}

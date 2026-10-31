@@ -4,6 +4,7 @@
     import { oauth_login } from "$lib/stores/user_store";
     import type { AuthProviderInfo } from "pocketbase";
     import { onMount } from "svelte";
+    import { _ } from "svelte-i18n";
 
     let error = $state(page.url.searchParams.get("error"));
     let errorDescription = $state(page.url.searchParams.get("error_description"));
@@ -20,8 +21,7 @@
 
         if (!providerData) {
             error = "missing_provider";
-            errorDescription =
-                "No OAuth provider was specified in local storage.";
+            errorDescription = $_("oauth-missing-provider");
             return;
         }
 
@@ -29,8 +29,7 @@
 
         if (provider.state !== oauthState) {
             error = "mismacthed_provider";
-            errorDescription =
-                "OAuth provider does not match the one defined in local storage.";
+            errorDescription = $_("oauth-provider-mismatch");
             return;
         }
 
@@ -44,7 +43,8 @@
             })
             .catch((e) => {
                 error = "oauth_error";
-                errorDescription = e.toString();
+                console.error(e);
+                errorDescription = $_("error-during-login");
             });
     });
 </script>
@@ -57,16 +57,16 @@
         <div
             class="rounded-xl bg-input-background-error border border-red-400 p-6 max-w-xl space-y-4"
         >
-            <h5 class="text-xl font-semibold">{error}</h5>
+            <h5 class="text-xl font-semibold">{$_("error-during-login")}</h5>
             <p>{errorDescription}</p>
             {#if errorURI}
-                <p><a class="underline" href={errorURI}>More Info</a></p>
+                <p><a class="underline" href={errorURI}>{$_("more-info")}</a></p>
             {/if}
         </div>
     {:else}
         <div class="max-w-fit space-y-4 text-center">
             <div class="spinner spinner-dark"></div>
-            <h5 class="text-xl font-semibold">Authenticating...</h5>
+            <h5 class="text-xl font-semibold">{$_("authenticating")}</h5>
         </div>
     {/if}
 </main>

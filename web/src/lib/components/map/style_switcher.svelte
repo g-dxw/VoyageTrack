@@ -4,6 +4,7 @@
     import RadioGroup, { type RadioItem } from "../base/radio_group.svelte";
     import { defaultMapState } from "$lib/vendor/maplibre-layer-manager/layers";
     import { untrack } from "svelte";
+    import { mapStyleLabel } from "$lib/util/map_i18n";
 
     interface Props {
         settings: StyleSwitcherControlOptions;
@@ -16,14 +17,14 @@
     let container: HTMLDivElement;
 
     let styleItems: RadioItem[] = $derived(
-        Object.entries(settings.styles).map<RadioItem>(([name, style]) => ({
-            text: name,
-            value: style,
+        Object.keys(settings.styles).map<RadioItem>((name) => ({
+            text: mapStyleLabel(name, $_),
+            value: name,
         })),
     );
 
     let selectedStyle: number = $derived(
-        styleItems.findIndex((i) => i.text === mapState.base),
+        styleItems.findIndex((i) => i.value === mapState.base),
     );
 
     let showSwitcher: boolean = $state(false);
@@ -45,7 +46,7 @@
     bind:this={container}
     class="maplibregl-ctrl maplibregl-ctrl-group relative z-10"
 >
-    <button onclick={toggleSwitcher} aria-label="toggle style switcher">
+    <button onclick={toggleSwitcher} aria-label={$_("toggle-map-style")}>
         <i class="fa fa-layer-group text-black"></i>
     </button>
 
@@ -61,7 +62,7 @@
             <button
                 class="fa fa-close !rounded-full"
                 onclick={hideSwitcher}
-                aria-label="close style switcher"
+                aria-label={$_("close")}
             ></button>
         </div>
         <RadioGroup
@@ -69,7 +70,7 @@
             items={styleItems}
             selected={selectedStyle}
             onchange={(style) => {
-                mapState.base = style.text;
+                mapState.base = style.value;
                 settings.onchange(mapState);
             }}
         ></RadioGroup>

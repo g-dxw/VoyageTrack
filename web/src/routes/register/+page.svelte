@@ -124,16 +124,18 @@
 </svelte:head>
 <main class="flex justify-center">
     <form
-        class="login-panel max-w-md border border-input-border rounded-xl p-8 flex flex-col justify-center items-center gap-8 w-[28rem] mt-8"
+        class="login-panel w-full max-w-sm mx-4 border border-input-border rounded-xl p-5 sm:p-6 flex flex-col justify-center items-center gap-4 mt-4 mb-6"
         use:form
     >
-        {#if $theme == "light"}
-            <LogoTextTwoLineDark></LogoTextTwoLineDark>
-        {:else}
-            <LogoTextTwoLineLight></LogoTextTwoLineLight>
-        {/if}
+        <div class="w-24 [&>svg]:w-full [&>svg]:h-auto">
+            {#if $theme == "light"}
+                <LogoTextTwoLineDark></LogoTextTwoLineDark>
+            {:else}
+                <LogoTextTwoLineLight></LogoTextTwoLineLight>
+            {/if}
+        </div>
         <h4 class="text-xl font-semibold">{$_("slogan")}</h4>
-        <div class="space-y-6 w-80">
+        <div class="space-y-4 w-full">
             <TextField
                 name="username"
                 label={$_("username")}

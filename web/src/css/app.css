@@ -36,6 +36,55 @@
     --fa-width: auto;
 }
 
+/* Keep runtime text tokens outside theme layers: components.css also imports
+   Tailwind defaults. The rem root stays unchanged so layout sizes do not shrink. */
+:root {
+    --text-base: 0.9375rem;
+    --text-lg: 1.0625rem;
+    --text-xl: 1.125rem;
+    --text-2xl: 1.375rem;
+    --text-3xl: 1.75rem;
+    --text-4xl: 2rem;
+    --text-5xl: 2.5rem;
+    --text-6xl: 3rem;
+    --text-7xl: 3.5rem;
+    --app-header-height: 5rem;
+}
+
+body {
+    font-size: var(--text-base);
+    line-height: 1.6;
+}
+
+@media (width < 40rem) {
+    :root {
+        --text-base: 1rem;
+        --app-header-height: 4.5rem;
+    }
+
+    /* Keep editable text readable without enlarging small metadata or toggles. */
+    :is(
+        input:not([type]),
+        input[type="text"],
+        input[type="password"],
+        input[type="search"],
+        input[type="url"],
+        input[type="email"],
+        input[type="tel"],
+        input[type="number"],
+        input[type="date"],
+        input[type="datetime-local"],
+        input[type="month"],
+        input[type="week"],
+        input[type="time"],
+        textarea,
+        select,
+        [contenteditable]:not([contenteditable="false"])
+    ) {
+        font-size: max(1rem, 1em);
+    }
+}
+
 @layer base {
 
     button:not(:disabled),

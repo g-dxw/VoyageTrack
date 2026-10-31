@@ -15,6 +15,8 @@ import { CrosshairPlugin } from "chartjs-plugin-crosshair";
 
 import type { Waypoint } from "$lib/models/waypoint";
 import { formatTimeHHMM } from "$lib/util/format_util";
+import { _ } from "svelte-i18n";
+import { get } from "svelte/store";
 import { haversineCumulatedDistanceWgs84, MIN_STORED_DISTANCE_METERS, smoothElevations, waypointTrackIndex } from "./tools";
 
 // The crosshair plugin only initializes `chart.crosshair` for charts with a
@@ -638,7 +640,7 @@ export class ElevationProfile {
                                 const tooltipInfo = [];
                                 if (this.settings.tooltipDisplayDistance) {
                                     tooltipInfo.push(
-                                        `After: ${this.cumulatedDistanceAdjustedUnit[
+                                        `${get(_)("distance")}: ${this.cumulatedDistanceAdjustedUnit[
                                             tooltipItem.dataIndex
                                         ].toFixed(2)} ${distanceUnit} ${this.cumulatedTime.length ? '(' + formatTimeHHMM(this.cumulatedTime[tooltipItem.dataIndex]) + ')' : ''}`
                                     );
@@ -646,7 +648,7 @@ export class ElevationProfile {
 
                                 if (this.settings.tooltipDisplayElevation) {
                                     tooltipInfo.push(
-                                        `Elevation: ${this.elevatedPositionsAdjustedUnit[
+                                        `${get(_)("elevation")}: ${this.elevatedPositionsAdjustedUnit[
                                             tooltipItem.dataIndex
                                         ][2].toFixed(2)} ${elevationUnit}`
                                     );
@@ -654,7 +656,7 @@ export class ElevationProfile {
 
                                 if (this.settings.tooltipDisplayDPlus) {
                                     tooltipInfo.push(
-                                        `D+: ${this.cumulatedDPlus[tooltipItem.dataIndex].toFixed(
+                                        `${get(_)("elevation-gain")}: ${this.cumulatedDPlus[tooltipItem.dataIndex].toFixed(
                                             0
                                         )} ${elevationUnit}`
                                     );
@@ -662,12 +664,12 @@ export class ElevationProfile {
 
                                 if (this.settings.tooltipDisplayGrade) {
                                     tooltipInfo.push(
-                                        `Grade: ${this.grade[tooltipItem.dataIndex].toFixed(1)}%`
+                                        `${get(_)("grade")}: ${this.grade[tooltipItem.dataIndex].toFixed(1)}%`
                                     );
                                 }
 
                                 if (this.settings.tooltipDisplaySpeed && this.speed.length) {
-                                    tooltipInfo.push(`Speed: ${this.speed[
+                                    tooltipInfo.push(`${get(_)("speed")}: ${this.speed[
                                         tooltipItem.dataIndex
                                     ]?.toFixed(2)} ${distanceUnit}/h`
                                     );

@@ -111,7 +111,7 @@
     {/if}
     <div class="dropdown-toggle">
         <button
-            aria-label="Toggle notification dropdown"
+            aria-label={$_("toggle-notifications")}
             onclick={toggleMenu}
             class="btn-icon"
         >
@@ -146,7 +146,7 @@
                         src={$theme === "light"
                             ? emptyStateNotificationLight
                             : emptyStateNotificationDark}
-                        alt="notification empty state"
+                        alt={$_("no-notifications")}
                     />
                     <p class="text-gray-500 text-sm text-center mt-2">
                         {$_("no-notifications")}

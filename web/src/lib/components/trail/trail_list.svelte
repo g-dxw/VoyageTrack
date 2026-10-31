@@ -318,7 +318,7 @@
 </script>
 
 <div class="min-w-0">
-    <div class="flex items-end flex-wrap lg:flex-nowrap gap-x-6 gap-y-2 mx-4">
+    <div class="flex items-end flex-wrap lg:flex-nowrap gap-x-4 gap-y-2 mx-2">
         <div class="basis-full order-1 md:order-0">
             <Pagination
                 page={pagination.page}
@@ -351,7 +351,7 @@
                             onchange={setSort}
                         ></Select>
                         <button
-                            aria-label="Change sort order"
+                            aria-label={$_("change-sort-order")}
                             id="sort-order-btn"
                             class="btn-icon"
                             class:rotated={filter.sortOrder == "-"}
@@ -377,7 +377,7 @@
         </div>
     </div>
 
-    <div id="trails" class="flex items-start flex-wrap gap-8 py-8 max-w-full">
+    <div id="trails" class="flex items-start flex-wrap gap-4 py-4 max-w-full">
         {#if loading}
             {#if selectedDisplayOption === "table"}
                 <TrailTable
@@ -450,7 +450,7 @@
             {/if}
         {/if}
     </div>
-    <div class="flex items-start flex-wrap lg:flex-nowrap gap-x-6 gap-y-2 mx-4">
+    <div class="flex items-start flex-wrap lg:flex-nowrap gap-x-4 gap-y-2 mx-2">
         <div class="basis-full order-1 md:order-0">
             <Pagination
                 page={pagination.page}
