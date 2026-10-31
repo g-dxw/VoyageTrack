@@ -6,6 +6,8 @@ test.beforeEach(async ({ context }) => {
 });
 
 test("desktop hero keeps animation and direct drag without a control bar", async ({ page }) => {
+    // CI software rendering needs time for model loading and repeated pixel readbacks.
+    test.setTimeout(90000);
     await page.emulateMedia({ reducedMotion: "no-preference" });
     await page.goto("/");
     const island = page.getByTestId("home-floating-island");

@@ -8,8 +8,9 @@ async function fontSize(locator: Locator): Promise<number> {
     return locator.evaluate(element => Number.parseFloat(getComputedStyle(element).fontSize));
 }
 
-test.beforeEach(async ({ context }) => {
+test.beforeEach(async ({ context, page }) => {
     await context.addCookies([{ name: "wanderer_locale", value: "zh", url: baseURL }]);
+    await page.emulateMedia({ reducedMotion: "reduce" });
 });
 
 test("uses a compact desktop type scale without shrinking controls or rem geometry", async ({ page }) => {
