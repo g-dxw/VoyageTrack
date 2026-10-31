@@ -115,3 +115,44 @@ Merged PR #42 to activate bounded Dependabot version updates on dev; reduced ope
 ### Next Steps
 
 - Review the three retained dependency PRs on dev separately; the Go update also changes its runtime requirement and PocketBase version.
+
+
+## Session 5: Resolve remaining dependency PRs
+<!-- trellis-session: v=2 fp=dbc918e15b3c7d49 -->
+
+**Date**: 2026-10-31
+**Task**: Resolve remaining dependency PRs
+**Branch**: `dev`
+
+### Summary
+
+Merged docs #44, frontend #45 and compatible backend replacement #48 into dev; closed superseded backend bundles #43/#47; open PR queue verified empty. Production application was not deployed.
+
+### Main Changes
+
+- PocketBase minor version upgrades require a coordinated Go/runtime review; policy #46 reached main and its automatic production workflow was cancelled before build or deploy steps.
+- Backend updates four direct modules plus GPX-required x/* modules; preserves Go directive1.25.0, PocketBase0.38.0, SQLite1.50.0 and ozzo-validation4.3.0. Adapted one production and three existing test GetStats calls to nil options after SDK source comparison.
+- Validation4.4.1 caused PocketBase initial _otps migration failures; reverting that dependency alone removed the failures. Original27 dirty paths and working-tree diff remained unchanged after local fast-forward.
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `60abb4d1c81842f3ee5c5cee4e84344fe89c93ff` | chore(deps): defer PocketBase minor upgrades for runtime review |
+| `3a90e26d3a50b255dd695330d7c85df6f683fe84` | Merge pull request #44 from g-dxw/dependabot/npm_and_yarn/docs/dev/docker-backward-compatible-dc4ef8d556 |
+| `ddeb7362e70b82a2c8483b63313ed574c314d011` | Merge pull request #45 from g-dxw/dependabot/npm_and_yarn/web/dev/npm-backward-compatible-be3ae924b8 |
+| `5ff842c8b79ff23b4218d666d1b6a1950f0ad5bc` | fix(deps): keep backend updates compatible with current runtime |
+
+### Testing
+
+- [OK] Docs PR44 npm ci and full build passed on checksum-verified Node22.23.4; lockfile unchanged, Astro check0 errors/warnings/hints,178HTML pages generated.
+- [OK] Backend Go1.26.1 GOTOOLCHAIN=local CGO_ENABLED=0 format/vet/test/build passed; dedicated real-Meilisearch tests skipped without their binary. Independent diff/API review passed.
+- [OK] Combined PR48 cloud CI passed Go/plugins/contracts, Svelte check0 errors/warnings,110Playwright and572unit tests;11existing unit skips. PR45 full CI also passed.
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- Production release remains separate. Evaluate Go1.27/PocketBase0.40 and validation4.4 compatibility in a dedicated framework upgrade.
