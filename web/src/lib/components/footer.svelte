@@ -6,6 +6,14 @@
     let { homeVariant = false }: { homeVariant?: boolean } = $props();
 </script>
 
+{#snippet relatedSites()}
+    <nav aria-label={$_("related-sites")} class="related-sites col-span-3 flex w-full flex-wrap items-center gap-x-6 gap-y-1 text-sm lg:col-span-4">
+        <span class="font-medium">{$_("related-sites")}</span>
+        <a href="https://outdoors.cqaiclub.online/">{$_("bayu-outdoors")}</a>
+        <a href="https://hiking.cqaiclub.online/">TUCLUB</a>
+    </nav>
+{/snippet}
+
 {#if homeVariant}
     <footer class="home-footer mx-auto flex w-full max-w-7xl flex-wrap items-center justify-between gap-4 px-4 py-6 sm:px-8">
         <a href="/" aria-label="VoyageTrack" class="w-40 shrink-0 [&>svg]:w-full [&>svg]:h-auto">
@@ -16,6 +24,7 @@
             <a href="https://wanderer.to/run/installation/quick/">{$_("help")}</a>
             <a href="https://github.com/g-dxw/VoyageTrack">GitHub</a>
         </nav>
+        {@render relatedSites()}
     </footer>
 {:else}
 <footer
@@ -76,10 +85,14 @@
             </li>
         </ul>
     </div>
+    {@render relatedSites()}
 </footer>
 {/if}
 
 <style>
+    .related-sites a { min-height: 2.75rem; }
+    .related-sites a:focus-visible { outline: 2px solid currentColor; outline-offset: 4px; border-radius: .25rem; }
+
     .home-footer {
         color: rgb(var(--content));
         border-top: 1px solid rgb(var(--separator));
